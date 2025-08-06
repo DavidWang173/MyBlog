@@ -9,7 +9,7 @@ import java.util.Map;
 public class JwtUtil {
 
     // JWT 密钥（建议放入配置文件）
-    private static final String SECRET_KEY = "chatapp_secret";
+    private static final String SECRET_KEY = "myblog_secret";
 
     // 过期时间（12 小时）
     private static final long EXPIRATION_TIME = 1000 * 60 * 60 * 12;
