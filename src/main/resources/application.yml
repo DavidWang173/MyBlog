@@ -12,19 +12,19 @@ spring:
     username: root
     password: 123456
 
-  mail:
-    host: smtp.163.com  # 163 ??? SMTP ???
-    port: 465  # 163 SMTP ???SSL?
-    username: pianodrum@163.com  # ?? 163 ????
-    password: DUi2SrtTndc5MayY  # ?????????????????
-    protocol: smtps
-    properties:
-      mail:
-        smtp:
-          auth: true
-          ssl:
-            enable: true
-            required: false
+#  mail:
+#    host: smtp.163.com  # 163 ??? SMTP ???
+#    port: 465  # 163 SMTP ???SSL?
+#    username: pianodrum@163.com  # ?? 163 ????
+#    password: DUi2SrtTndc5MayY  # ?????????????????
+#    protocol: smtps
+#    properties:
+#      mail:
+#        smtp:
+#          auth: true
+#          ssl:
+#            enable: true
+#            required: false
 
   servlet:
     multipart:
