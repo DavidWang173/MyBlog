@@ -12,7 +12,6 @@ CREATE TABLE users (
 );
 
 -- 文章表
-
 CREATE TABLE articles (
                           id BIGINT PRIMARY KEY AUTO_INCREMENT,
                           user_id BIGINT NOT NULL,
@@ -39,13 +38,6 @@ CREATE TABLE article_drafts (
                                 is_auto_saved BOOLEAN DEFAULT FALSE,
                                 create_time DATETIME DEFAULT CURRENT_TIMESTAMP,
                                 last_edit_time DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
-);
-
--- 文章种类表
-CREATE TABLE article_categories (
-                                    id BIGINT PRIMARY KEY AUTO_INCREMENT,
-                                    name VARCHAR(50) NOT NULL UNIQUE,
-                                    create_time DATETIME DEFAULT CURRENT_TIMESTAMP
 );
 
 -- 标签表
