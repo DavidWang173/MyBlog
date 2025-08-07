@@ -70,6 +70,11 @@
             <version>2.11.1</version> <!-- 或 spring boot 3.5.4 支持的版本 -->
         </dependency>
 
+        <dependency>
+            <groupId>com.fasterxml.jackson.datatype</groupId>
+            <artifactId>jackson-datatype-jsr310</artifactId>
+        </dependency>
+
         <!-- 图片验证码 -->
         <dependency>
             <groupId>com.github.penggle</groupId>

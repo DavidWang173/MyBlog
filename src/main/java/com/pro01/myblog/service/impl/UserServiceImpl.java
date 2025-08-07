@@ -7,12 +7,14 @@ import com.pro01.myblog.service.UserService;
 import com.pro01.myblog.utils.JwtUtil;
 import com.pro01.myblog.utils.Md5Util;
 import jakarta.annotation.Resource;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
 import java.time.LocalDateTime;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 
 @Service
 public class UserServiceImpl implements UserService {
@@ -22,6 +24,9 @@ public class UserServiceImpl implements UserService {
 
     @Resource
     private StringRedisTemplate stringRedisTemplate;
+
+    @Resource
+    private RedisTemplate<String, Object> redisTemplate;
 
     // 用户注册
     @Override
@@ -92,17 +97,30 @@ public class UserServiceImpl implements UserService {
         }
 
         userMapper.updateUserFields(userId, dto.getNickname(), dto.getSignature());
+
+        // 清除缓存
+        redisTemplate.delete("user:info:" + userId);
     }
 
     // 查看个人信息
     @Override
     public UserInfoDTO getUserInfo(Long userId) {
+        String redisKey = "user:info:" + userId;
+
+        // 1. 先查 Redis
+        Object cached = redisTemplate.opsForValue().get(redisKey);
+        if (cached != null && cached instanceof UserInfoDTO dto) {
+            return dto;
+        }
+
+        // 2. Redis 没有就查数据库
         User user = userMapper.findById(userId);
         if (user == null) {
             throw new IllegalArgumentException("用户不存在");
         }
 
-        return UserInfoDTO.builder()
+        // 3. 封装成 DTO
+        UserInfoDTO dto = UserInfoDTO.builder()
                 .id(user.getId())
                 .username(user.getUsername())
                 .nickname(user.getNickname())
@@ -111,5 +129,10 @@ public class UserServiceImpl implements UserService {
                 .role(user.getRole())
                 .registerTime(user.getRegisterTime())
                 .build();
+
+        // 4. 写入 Redis（设置30分钟过期）
+        redisTemplate.opsForValue().set(redisKey, dto, 30, TimeUnit.MINUTES);
+
+        return dto;
     }
 }
