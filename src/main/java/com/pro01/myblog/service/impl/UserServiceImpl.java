@@ -1,8 +1,6 @@
 package com.pro01.myblog.service.impl;
 
-import com.pro01.myblog.dto.UserLoginDTO;
-import com.pro01.myblog.dto.UserLoginResponse;
-import com.pro01.myblog.dto.UserRegisterDTO;
+import com.pro01.myblog.dto.*;
 import com.pro01.myblog.mapper.UserMapper;
 import com.pro01.myblog.pojo.User;
 import com.pro01.myblog.service.UserService;
@@ -84,5 +82,34 @@ public class UserServiceImpl implements UserService {
         String token = JwtUtil.genToken(claims);
 
         return new UserLoginResponse(token, user.getNickname(), user.getAvatar(), user.getRole());
+    }
+
+    // 修改个人信息
+    @Override
+    public void updateUserInfo(Long userId, UserUpdateDTO dto) {
+        if (dto.getNickname() == null && dto.getSignature() == null) {
+            throw new IllegalArgumentException("不能同时为空");
+        }
+
+        userMapper.updateUserFields(userId, dto.getNickname(), dto.getSignature());
+    }
+
+    // 查看个人信息
+    @Override
+    public UserInfoDTO getUserInfo(Long userId) {
+        User user = userMapper.findById(userId);
+        if (user == null) {
+            throw new IllegalArgumentException("用户不存在");
+        }
+
+        return UserInfoDTO.builder()
+                .id(user.getId())
+                .username(user.getUsername())
+                .nickname(user.getNickname())
+                .avatar(user.getAvatar())
+                .signature(user.getSignature())
+                .role(user.getRole())
+                .registerTime(user.getRegisterTime())
+                .build();
     }
 }

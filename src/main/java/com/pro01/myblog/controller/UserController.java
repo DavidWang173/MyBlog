@@ -1,11 +1,11 @@
 package com.pro01.myblog.controller;
 
-import com.pro01.myblog.dto.UserLoginDTO;
-import com.pro01.myblog.dto.UserLoginResponse;
-import com.pro01.myblog.dto.UserRegisterDTO;
+import com.pro01.myblog.dto.*;
 import com.pro01.myblog.pojo.Result;
 import com.pro01.myblog.service.UserService;
+import com.pro01.myblog.utils.TokenUtil;
 import jakarta.annotation.Resource;
+import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -28,4 +28,22 @@ public class UserController {
         UserLoginResponse res = userService.login(dto);
         return Result.success(res);
     }
+
+    // 修改个人信息
+    @PostMapping("/update")
+    public Result<Void> updateUserInfo(@RequestBody UserUpdateDTO dto,
+                                       HttpServletRequest request) {
+        Long userId = TokenUtil.getUserId(request);
+        userService.updateUserInfo(userId, dto);
+        return Result.success();
+    }
+
+    // 查看个人信息
+    @GetMapping("/info")
+    public Result<UserInfoDTO> getUserInfo(HttpServletRequest request) {
+        Long userId = TokenUtil.getUserId(request);
+        UserInfoDTO userInfo = userService.getUserInfo(userId);
+        return Result.success(userInfo);
+    }
+
 }
