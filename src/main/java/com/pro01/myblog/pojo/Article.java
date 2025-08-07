@@ -17,10 +17,11 @@ public class Article {
     private String title;
     private String content;
     private String summary;
-    private Long categoryId;
+    private String category;
     private String coverUrl;
     private Boolean isTop;
     private Boolean isRecommend;
+    private Long viewCount;
     private String status;
     private LocalDateTime createTime;
     private LocalDateTime updateTime;

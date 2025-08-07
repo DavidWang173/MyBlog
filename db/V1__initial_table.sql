@@ -12,16 +12,18 @@ CREATE TABLE users (
 );
 
 -- 文章表
+
 CREATE TABLE articles (
                           id BIGINT PRIMARY KEY AUTO_INCREMENT,
                           user_id BIGINT NOT NULL,
                           title VARCHAR(255) NOT NULL,
                           content TEXT NOT NULL,
                           summary TEXT,
-                          category_id BIGINT,
+                          category ENUM('TECH', 'LIFE', 'MUSIC', 'MOVIE', 'NOTE', 'FRIENDS') NOT NULL,
                           cover_url VARCHAR(255),
                           is_top BOOLEAN DEFAULT FALSE,
                           is_recommend BOOLEAN DEFAULT FALSE,
+                          view_count BIGINT DEFAULT 0,
                           status ENUM('PUBLISHED', 'DELETED') DEFAULT 'PUBLISHED',
                           create_time DATETIME DEFAULT CURRENT_TIMESTAMP,
                           update_time DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
@@ -75,14 +77,6 @@ CREATE TABLE article_favorites (
                                    article_id BIGINT NOT NULL,
                                    create_time DATETIME DEFAULT CURRENT_TIMESTAMP,
                                    PRIMARY KEY (user_id, article_id)
-);
-
--- 文章浏览量表
-CREATE TABLE article_views (
-                               article_id BIGINT NOT NULL,
-                               view_count BIGINT DEFAULT 0,
-                               last_update_time DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-                               PRIMARY KEY (article_id)
 );
 
 -- 评论表
