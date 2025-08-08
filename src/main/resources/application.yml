@@ -53,3 +53,7 @@ mybatis:
 avatar:
   upload-path: uploads/avatar/     # 项目目录下相对路径
   access-url-prefix: http://localhost:8080/uploads/avatar/
+
+cover:
+  upload-path: uploads/cover/
+  access-url-prefix: http://localhost:8080/uploads/cover/

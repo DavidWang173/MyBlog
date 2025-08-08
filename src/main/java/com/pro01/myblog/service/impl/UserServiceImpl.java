@@ -154,8 +154,6 @@ public class UserServiceImpl implements UserService {
             String filename = UUID.randomUUID() + extension;
 
             // 构造完整路径
-//            String relativePath = avatarProperties.getUploadPath() + filename;
-//            File dest = new File(relativePath);
             String realPath = new File("").getAbsolutePath() + File.separator + avatarProperties.getUploadPath() + filename;
             File dest = new File(realPath);
             dest.getParentFile().mkdirs(); // 创建目录
