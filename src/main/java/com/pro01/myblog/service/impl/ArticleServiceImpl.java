@@ -51,17 +51,28 @@ public class ArticleServiceImpl implements ArticleService {
                     : dto.getContent();
         }
 
-        Article article = Article.builder()
-                .userId(userId)
-                .title(dto.getTitle())
-                .content(dto.getContent())
-                .summary(summary)
-                .category(dto.getCategory())
-                .coverUrl(dto.getCoverUrl()) // 可为 null
-                .status("PUBLISHED")
-                .createTime(LocalDateTime.now())
-                .updateTime(LocalDateTime.now())
-                .build();
+//        Article article = Article.builder()
+//                .userId(userId)
+//                .title(dto.getTitle())
+//                .content(dto.getContent())
+//                .summary(summary)
+//                .category(dto.getCategory())
+//                .coverUrl(dto.getCoverUrl()) // 可为 null
+//                .status("PUBLISHED")
+//                .createTime(LocalDateTime.now())
+//                .updateTime(LocalDateTime.now())
+//                .build();
+
+        Article article = new Article();
+        article.setUserId(userId);
+        article.setTitle(dto.getTitle());
+        article.setContent(dto.getContent());
+        article.setSummary(summary);
+        article.setCategory(dto.getCategory());
+        article.setCoverUrl(dto.getCoverUrl()); // 可为 null
+        article.setStatus("PUBLISHED");
+        article.setCreateTime(LocalDateTime.now());
+        article.setUpdateTime(LocalDateTime.now());
 
         articleMapper.insertArticle(article);
 

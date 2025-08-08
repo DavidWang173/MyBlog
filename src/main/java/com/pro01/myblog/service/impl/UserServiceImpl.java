@@ -56,15 +56,24 @@ public class UserServiceImpl implements UserService {
         String encryptedPwd = Md5Util.getMD5String(dto.getPassword());
 
         // 创建用户
-        User user = User.builder()
-                .username(dto.getUsername())
-                .password(encryptedPwd)
-                .nickname(dto.getNickname())
-                .avatar("/images/avatar/default.jpg")
-                .role("USER")
-                .registerTime(LocalDateTime.now())
-                .updatedAt(LocalDateTime.now())
-                .build();
+//        User user = User.builder()
+//                .username(dto.getUsername())
+//                .password(encryptedPwd)
+//                .nickname(dto.getNickname())
+//                .avatar("/images/avatar/default.jpg")
+//                .role("USER")
+//                .registerTime(LocalDateTime.now())
+//                .updatedAt(LocalDateTime.now())
+//                .build();
+
+        User user = new User();
+        user.setUsername(dto.getUsername());
+        user.setPassword(encryptedPwd);
+        user.setNickname(dto.getNickname());
+        user.setAvatar("/images/avatar/default.jpg");
+        user.setRole("USER");
+        user.setRegisterTime(LocalDateTime.now());
+        user.setUpdatedAt(LocalDateTime.now());
 
         userMapper.insertUser(user);
 
@@ -128,15 +137,24 @@ public class UserServiceImpl implements UserService {
         }
 
         // 3. 封装成 DTO
-        UserInfoDTO dto = UserInfoDTO.builder()
-                .id(user.getId())
-                .username(user.getUsername())
-                .nickname(user.getNickname())
-                .avatar(user.getAvatar())
-                .signature(user.getSignature())
-                .role(user.getRole())
-                .registerTime(user.getRegisterTime())
-                .build();
+//        UserInfoDTO dto = UserInfoDTO.builder()
+//                .id(user.getId())
+//                .username(user.getUsername())
+//                .nickname(user.getNickname())
+//                .avatar(user.getAvatar())
+//                .signature(user.getSignature())
+//                .role(user.getRole())
+//                .registerTime(user.getRegisterTime())
+//                .build();
+
+        UserInfoDTO dto = new UserInfoDTO();
+        dto.setId(user.getId());
+        dto.setUsername(user.getUsername());
+        dto.setNickname(user.getNickname());
+        dto.setAvatar(user.getAvatar());
+        dto.setSignature(user.getSignature());
+        dto.setRole(user.getRole());
+        dto.setRegisterTime(user.getRegisterTime());
 
         // 4. 写入 Redis（设置30分钟过期）
         redisTemplate.opsForValue().set(redisKey, dto, 30, TimeUnit.MINUTES);
