@@ -15,4 +15,8 @@ public interface ArticleMapper {
     // 查看文章详情
     @Select("SELECT * FROM articles WHERE id = #{id} AND status = 'PUBLISHED'")
     Article findById(@Param("id") Long id);
+
+    // 记录浏览量
+    @Update("UPDATE articles SET view_count = view_count + #{delta} WHERE id = #{id}")
+    void updateViewCount(@Param("id") Long id, @Param("delta") Long delta);
 }

@@ -11,6 +11,7 @@ import com.pro01.myblog.service.ArticleService;
 import jakarta.annotation.Resource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -30,6 +31,9 @@ public class ArticleServiceImpl implements ArticleService {
 
     @Autowired
     private RedisTemplate<String, Object> redisTemplate;
+
+    @Autowired
+    private StringRedisTemplate stringRedisTemplate;
 
     @Autowired
     private UserMapper userMapper;
@@ -94,9 +98,17 @@ public class ArticleServiceImpl implements ArticleService {
     public ArticleDetailDTO getArticleDetail(Long articleId) {
         String redisKey = "article:detail:" + articleId;
 
+        // 增加 Redis 浏览量计数
+        stringRedisTemplate.opsForValue().increment("article:view:" + articleId);
+
         // 查缓存
         Object cached = redisTemplate.opsForValue().get(redisKey);
         if (cached != null && cached instanceof ArticleDetailDTO dto) {
+            // 获取 Redis 中实时浏览量
+            String redisView = stringRedisTemplate.opsForValue().get("article:view:" + articleId);
+            if (redisView != null) {
+                dto.setViewCount(Long.parseLong(redisView));
+            }
             return dto;
         }
 
@@ -120,10 +132,14 @@ public class ArticleServiceImpl implements ArticleService {
         dto.setCoverUrl(article.getCoverUrl());
         dto.setNickname(author.getNickname());
         dto.setAvatar(author.getAvatar());
-        dto.setViewCount(article.getViewCount());
+
+        // 从 Redis 获取实时浏览量（否则用数据库的）
+        String redisView = stringRedisTemplate.opsForValue().get("article:view:" + articleId);
+        dto.setViewCount(redisView != null ? Long.parseLong(redisView) : article.getViewCount());
+
         dto.setCreateTime(article.getCreateTime());
 
-        // 写缓存（30分钟）
+        // 写缓存（不包含 viewCount，viewCount 由 Redis 单独维护）
         redisTemplate.opsForValue().set(redisKey, dto, 30, TimeUnit.MINUTES);
 
         return dto;
