@@ -11,4 +11,5 @@ public class ArticleHotDTO {
     private String avatar;
     private Long viewCount;
     private Long likeCount;
+    private Long commentCount;
 }

@@ -30,7 +30,6 @@ public class WebConfig implements WebMvcConfigurer {
                         "/user/register",
                         "/captcha",
                         "/captcha/**",
-                        "/article/**",
                         "/uploads/**",
                         "/favicon.ico"); // 放行部分公开接口
     }
