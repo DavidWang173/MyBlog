@@ -12,6 +12,7 @@ public class ArticleListDTO {
     private String category;
     private String coverUrl;
     private String nickname;
+    private String avatar;
     private Long viewCount;
     private LocalDateTime createTime;
 }

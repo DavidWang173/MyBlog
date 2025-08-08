@@ -25,8 +25,4 @@ public class Article {
     private String status;
     private LocalDateTime createTime;
     private LocalDateTime updateTime;
-
-    // 联表查询字段(文章列表)
-    private String nickname;
-    private String avatar;
 }

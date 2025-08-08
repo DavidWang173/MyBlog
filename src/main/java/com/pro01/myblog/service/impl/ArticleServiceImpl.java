@@ -153,23 +153,8 @@ public class ArticleServiceImpl implements ArticleService {
     @Override
     public PageResult<ArticleListDTO> getArticleList(int page, int pageSize) {
         int offset = (page - 1) * pageSize;
-        List<Article> articles = articleMapper.findArticles(offset, pageSize);
+        List<ArticleListDTO> dtoList = articleMapper.findArticles(offset, pageSize);
         long total = articleMapper.countArticles();
-
-        List<ArticleListDTO> dtoList = new ArrayList<>();
-        for (Article article : articles) {
-            ArticleListDTO dto = new ArticleListDTO();
-            dto.setId(article.getId());
-            dto.setTitle(article.getTitle());
-            dto.setSummary(article.getSummary());
-            dto.setCategory(article.getCategory());
-            dto.setCoverUrl(article.getCoverUrl());
-            dto.setNickname(article.getNickname()); // 映射自 JOIN
-            dto.setNickname(article.getAvatar());
-            dto.setViewCount(article.getViewCount());
-            dto.setCreateTime(article.getCreateTime());
-            dtoList.add(dto);
-        }
 
         return PageResult.of(total, dtoList, page, pageSize);
     }
