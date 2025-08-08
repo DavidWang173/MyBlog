@@ -2,10 +2,12 @@ package com.pro01.myblog.service.impl;
 
 import com.pro01.myblog.config.CoverProperties;
 import com.pro01.myblog.dto.ArticleDetailDTO;
+import com.pro01.myblog.dto.ArticleListDTO;
 import com.pro01.myblog.dto.ArticlePublishDTO;
 import com.pro01.myblog.mapper.ArticleMapper;
 import com.pro01.myblog.mapper.UserMapper;
 import com.pro01.myblog.pojo.Article;
+import com.pro01.myblog.pojo.PageResult;
 import com.pro01.myblog.pojo.User;
 import com.pro01.myblog.service.ArticleService;
 import jakarta.annotation.Resource;
@@ -17,6 +19,8 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.io.File;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
@@ -143,5 +147,30 @@ public class ArticleServiceImpl implements ArticleService {
         redisTemplate.opsForValue().set(redisKey, dto, 30, TimeUnit.MINUTES);
 
         return dto;
+    }
+
+    // 查看文章列表
+    @Override
+    public PageResult<ArticleListDTO> getArticleList(int page, int pageSize) {
+        int offset = (page - 1) * pageSize;
+        List<Article> articles = articleMapper.findArticles(offset, pageSize);
+        long total = articleMapper.countArticles();
+
+        List<ArticleListDTO> dtoList = new ArrayList<>();
+        for (Article article : articles) {
+            ArticleListDTO dto = new ArticleListDTO();
+            dto.setId(article.getId());
+            dto.setTitle(article.getTitle());
+            dto.setSummary(article.getSummary());
+            dto.setCategory(article.getCategory());
+            dto.setCoverUrl(article.getCoverUrl());
+            dto.setNickname(article.getNickname()); // 映射自 JOIN
+            dto.setNickname(article.getAvatar());
+            dto.setViewCount(article.getViewCount());
+            dto.setCreateTime(article.getCreateTime());
+            dtoList.add(dto);
+        }
+
+        return PageResult.of(total, dtoList, page, pageSize);
     }
 }

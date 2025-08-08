@@ -1,7 +1,9 @@
 package com.pro01.myblog.controller;
 
 import com.pro01.myblog.dto.ArticleDetailDTO;
+import com.pro01.myblog.dto.ArticleListDTO;
 import com.pro01.myblog.dto.ArticlePublishDTO;
+import com.pro01.myblog.pojo.PageResult;
 import com.pro01.myblog.pojo.Result;
 import com.pro01.myblog.service.ArticleService;
 import com.pro01.myblog.utils.RequestUtil;
@@ -56,5 +58,13 @@ public class ArticleController {
     public Result<ArticleDetailDTO> getArticleDetail(@PathVariable("articleId") Long id) {
         ArticleDetailDTO dto = articleService.getArticleDetail(id);
         return Result.success(dto);
+    }
+
+    // 查看文章列表
+    @GetMapping("/list")
+    public Result<PageResult<ArticleListDTO>> list(@RequestParam(defaultValue = "1") int page,
+                                                   @RequestParam(defaultValue = "10") int pageSize) {
+        PageResult<ArticleListDTO> result = articleService.getArticleList(page, pageSize);
+        return Result.success(result);
     }
 }

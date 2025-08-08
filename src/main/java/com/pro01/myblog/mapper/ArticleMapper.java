@@ -3,6 +3,8 @@ package com.pro01.myblog.mapper;
 import com.pro01.myblog.pojo.Article;
 import org.apache.ibatis.annotations.*;
 
+import java.util.List;
+
 @Mapper
 public interface ArticleMapper {
 
@@ -19,4 +21,16 @@ public interface ArticleMapper {
     // 记录浏览量
     @Update("UPDATE articles SET view_count = view_count + #{delta} WHERE id = #{id}")
     void updateViewCount(@Param("id") Long id, @Param("delta") Long delta);
+
+    // 查看文章列表
+    @Select("SELECT a.*, u.nickname, u.avatar " +
+            "FROM articles a " +
+            "JOIN users u ON a.user_id = u.id " +
+            "WHERE a.status = 'PUBLISHED' " +
+            "ORDER BY a.create_time DESC " +
+            "LIMIT #{offset}, #{limit}")
+    List<Article> findArticles(@Param("offset") int offset, @Param("limit") int limit);
+
+    @Select("SELECT COUNT(*) FROM articles WHERE status = 'PUBLISHED'")
+    long countArticles();
 }

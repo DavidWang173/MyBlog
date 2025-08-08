@@ -1,7 +1,9 @@
 package com.pro01.myblog.service;
 
 import com.pro01.myblog.dto.ArticleDetailDTO;
+import com.pro01.myblog.dto.ArticleListDTO;
 import com.pro01.myblog.dto.ArticlePublishDTO;
+import com.pro01.myblog.pojo.PageResult;
 import org.springframework.web.multipart.MultipartFile;
 
 public interface ArticleService {
@@ -14,4 +16,7 @@ public interface ArticleService {
 
     // 查看文章详情
     ArticleDetailDTO getArticleDetail(Long articleId);
+
+    // 查看文章列表
+    PageResult<ArticleListDTO> getArticleList(int page, int pageSize);
 }
