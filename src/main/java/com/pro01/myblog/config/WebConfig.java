@@ -22,11 +22,16 @@ public class WebConfig implements WebMvcConfigurer {
     @Override
     public void addInterceptors(InterceptorRegistry registry) {
         registry.addInterceptor(new LoginInterceptor())
-                .addPathPatterns("/**") // 拦截所有请求
+                .addPathPatterns(
+                        "/article/cover",
+                        "/article/publish") // 拦截所有请求
                 .excludePathPatterns(
                         "/user/login",
                         "/user/register",
                         "/captcha",
-                        "/captcha/**"); // 放行部分公开接口
+                        "/captcha/**",
+                        "/article/**",
+                        "/uploads/**",
+                        "/favicon.ico"); // 放行部分公开接口
     }
 }

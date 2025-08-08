@@ -27,4 +27,8 @@ public interface UserMapper {
     // 上传头像
     @Update("UPDATE users SET avatar = #{avatar}, updated_at = NOW() WHERE id = #{userId}")
     void updateAvatar(@Param("userId") Long userId, @Param("avatar") String avatar);
+
+    // 查询用户的昵称和头像（文章详情要用）
+    @Select("SELECT nickname, avatar FROM users WHERE id = #{id}")
+    User findSimpleUserById(@Param("id") Long id);
 }
