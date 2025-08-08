@@ -3,6 +3,7 @@ package com.pro01.myblog.controller;
 import com.google.code.kaptcha.impl.DefaultKaptcha;
 import com.pro01.myblog.pojo.Result;
 import jakarta.annotation.Resource;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -18,10 +19,10 @@ import javax.imageio.ImageIO;
 @RestController
 public class CaptchaController {
 
-    @Resource
+    @Autowired
     private DefaultKaptcha kaptcha;
 
-    @Resource
+    @Autowired
     private StringRedisTemplate stringRedisTemplate;
 
     @GetMapping("/captcha")

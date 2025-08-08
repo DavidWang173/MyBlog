@@ -23,4 +23,8 @@ public interface UserMapper {
     // 查看个人信息
     @Select("SELECT * FROM users WHERE id = #{id}")
     User findById(@Param("id") Long id);
+
+    // 上传头像
+    @Update("UPDATE users SET avatar = #{avatar}, updated_at = NOW() WHERE id = #{userId}")
+    void updateAvatar(@Param("userId") Long userId, @Param("avatar") String avatar);
 }

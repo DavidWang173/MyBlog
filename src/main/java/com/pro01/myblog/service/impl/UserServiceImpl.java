@@ -1,5 +1,6 @@
 package com.pro01.myblog.service.impl;
 
+import com.pro01.myblog.config.AvatarProperties;
 import com.pro01.myblog.dto.*;
 import com.pro01.myblog.mapper.UserMapper;
 import com.pro01.myblog.pojo.User;
@@ -7,26 +8,33 @@ import com.pro01.myblog.service.UserService;
 import com.pro01.myblog.utils.JwtUtil;
 import com.pro01.myblog.utils.Md5Util;
 import jakarta.annotation.Resource;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.File;
 import java.time.LocalDateTime;
 import java.util.Map;
+import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
 @Service
 public class UserServiceImpl implements UserService {
 
-    @Resource
+    @Autowired
     private UserMapper userMapper;
 
-    @Resource
+    @Autowired
     private StringRedisTemplate stringRedisTemplate;
 
-    @Resource
+    @Autowired
     private RedisTemplate<String, Object> redisTemplate;
+
+    @Autowired
+    private AvatarProperties avatarProperties;
 
     // 用户注册
     @Override
@@ -134,5 +142,35 @@ public class UserServiceImpl implements UserService {
         redisTemplate.opsForValue().set(redisKey, dto, 30, TimeUnit.MINUTES);
 
         return dto;
+    }
+
+    // 上传头像
+    @Override
+    public String uploadAvatar(Long userId, MultipartFile file) {
+        try {
+            // 获取原始文件名和后缀
+            String originalFilename = file.getOriginalFilename();
+            String extension = originalFilename.substring(originalFilename.lastIndexOf("."));
+            String filename = UUID.randomUUID() + extension;
+
+            // 构造完整路径
+//            String relativePath = avatarProperties.getUploadPath() + filename;
+//            File dest = new File(relativePath);
+            String realPath = new File("").getAbsolutePath() + File.separator + avatarProperties.getUploadPath() + filename;
+            File dest = new File(realPath);
+            dest.getParentFile().mkdirs(); // 创建目录
+            file.transferTo(dest);
+
+            // 构建头像访问地址
+            String avatarUrl = avatarProperties.getAccessUrlPrefix() + filename;
+
+            // 更新数据库
+            userMapper.updateAvatar(userId, avatarUrl);
+            redisTemplate.delete("user:info:" + userId);
+
+            return avatarUrl;
+        } catch (Exception e) {
+            throw new RuntimeException("本地头像上传失败", e);
+        }
     }
 }

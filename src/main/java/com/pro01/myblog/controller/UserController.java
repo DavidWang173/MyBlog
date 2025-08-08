@@ -6,13 +6,15 @@ import com.pro01.myblog.service.UserService;
 import com.pro01.myblog.utils.TokenUtil;
 import jakarta.annotation.Resource;
 import jakarta.servlet.http.HttpServletRequest;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 @RestController
 @RequestMapping("/user")
 public class UserController {
 
-    @Resource
+    @Autowired
     private UserService userService;
 
     // 用户注册
@@ -46,4 +48,12 @@ public class UserController {
         return Result.success(userInfo);
     }
 
+    // 上传头像
+    @PostMapping("/avatar")
+    public Result<String> uploadAvatar(@RequestParam("file") MultipartFile file,
+                                       HttpServletRequest request) {
+        Long userId = TokenUtil.getUserId(request);
+        String avatarUrl = userService.uploadAvatar(userId, file);
+        return Result.success(avatarUrl);
+    }
 }
