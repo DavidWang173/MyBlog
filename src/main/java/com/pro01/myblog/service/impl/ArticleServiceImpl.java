@@ -2,6 +2,7 @@ package com.pro01.myblog.service.impl;
 
 import com.pro01.myblog.config.CoverProperties;
 import com.pro01.myblog.dto.ArticleDetailDTO;
+import com.pro01.myblog.dto.ArticleHotDTO;
 import com.pro01.myblog.dto.ArticleListDTO;
 import com.pro01.myblog.dto.ArticlePublishDTO;
 import com.pro01.myblog.mapper.ArticleMapper;
@@ -19,10 +20,9 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.io.File;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.UUID;
+import java.util.*;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 
 @Service
 public class ArticleServiceImpl implements ArticleService {
@@ -61,6 +61,7 @@ public class ArticleServiceImpl implements ArticleService {
         }
     }
 
+    // 发布文章
     @Override
     public void publishArticle(Long userId, ArticlePublishDTO dto) {
         String summary = dto.getSummary();
@@ -69,18 +70,6 @@ public class ArticleServiceImpl implements ArticleService {
                     ? dto.getContent().substring(0, 30)
                     : dto.getContent();
         }
-
-//        Article article = Article.builder()
-//                .userId(userId)
-//                .title(dto.getTitle())
-//                .content(dto.getContent())
-//                .summary(summary)
-//                .category(dto.getCategory())
-//                .coverUrl(dto.getCoverUrl()) // 可为 null
-//                .status("PUBLISHED")
-//                .createTime(LocalDateTime.now())
-//                .updateTime(LocalDateTime.now())
-//                .build();
 
         Article article = new Article();
         article.setUserId(userId);
@@ -98,25 +87,67 @@ public class ArticleServiceImpl implements ArticleService {
         // TODO: 之后这里可以调用 elasticService.indexArticle(article);
     }
 
+    // 查看文章详情
+//    @Override
+//    public ArticleDetailDTO getArticleDetail(Long articleId) {
+//        String redisKey = "article:detail:" + articleId;
+//
+//        // 增加 Redis 浏览量计数
+//        stringRedisTemplate.opsForValue().increment("article:view:" + articleId);
+//
+//        // 查缓存
+//        Object cached = redisTemplate.opsForValue().get(redisKey);
+//        if (cached != null && cached instanceof ArticleDetailDTO dto) {
+//            // 获取 Redis 中实时浏览量
+//            String redisView = stringRedisTemplate.opsForValue().get("article:view:" + articleId);
+//            if (redisView != null) {
+//                dto.setViewCount(Long.parseLong(redisView));
+//            }
+//            return dto;
+//        }
+//
+//        // 查数据库
+//        Article article = articleMapper.findById(articleId);
+//        if (article == null) {
+//            throw new IllegalArgumentException("文章不存在");
+//        }
+//
+//        User author = userMapper.findSimpleUserById(article.getUserId());
+//        if (author == null) {
+//            throw new IllegalArgumentException("作者不存在");
+//        }
+//
+//        ArticleDetailDTO dto = new ArticleDetailDTO();
+//        dto.setId(article.getId());
+//        dto.setTitle(article.getTitle());
+//        dto.setContent(article.getContent());
+//        dto.setSummary(article.getSummary());
+//        dto.setCategory(article.getCategory());
+//        dto.setCoverUrl(article.getCoverUrl());
+//        dto.setNickname(author.getNickname());
+//        dto.setAvatar(author.getAvatar());
+//
+//        // 从 Redis 获取实时浏览量（否则用数据库的）
+//        String redisView = stringRedisTemplate.opsForValue().get("article:view:" + articleId);
+//        dto.setViewCount(redisView != null ? Long.parseLong(redisView) : article.getViewCount());
+//        dto.setLikeCount(article.getLikeCount() != null ? article.getLikeCount() : 0L);
+//        dto.setCommentCount(article.getCommentCount() != null ? article.getCommentCount() : 0L);
+//
+//        dto.setCreateTime(article.getCreateTime());
+//
+//        // 写缓存（不包含 viewCount，viewCount 由 Redis 单独维护）
+//        redisTemplate.opsForValue().set(redisKey, dto, 30, TimeUnit.MINUTES);
+//
+//        return dto;
+//    }
     @Override
     public ArticleDetailDTO getArticleDetail(Long articleId) {
         String redisKey = "article:detail:" + articleId;
 
-        // 增加 Redis 浏览量计数
+        // 增加 Redis 浏览量计数（增量部分）
         stringRedisTemplate.opsForValue().increment("article:view:" + articleId);
 
-        // 查缓存
-        Object cached = redisTemplate.opsForValue().get(redisKey);
-        if (cached != null && cached instanceof ArticleDetailDTO dto) {
-            // 获取 Redis 中实时浏览量
-            String redisView = stringRedisTemplate.opsForValue().get("article:view:" + articleId);
-            if (redisView != null) {
-                dto.setViewCount(Long.parseLong(redisView));
-            }
-            return dto;
-        }
-
-        // 查数据库
+        // 查数据库（即使缓存命中也需要数据库的持久 view_count）
         Article article = articleMapper.findById(articleId);
         if (article == null) {
             throw new IllegalArgumentException("文章不存在");
@@ -127,6 +158,7 @@ public class ArticleServiceImpl implements ArticleService {
             throw new IllegalArgumentException("作者不存在");
         }
 
+        // 构建 DTO
         ArticleDetailDTO dto = new ArticleDetailDTO();
         dto.setId(article.getId());
         dto.setTitle(article.getTitle());
@@ -136,14 +168,18 @@ public class ArticleServiceImpl implements ArticleService {
         dto.setCoverUrl(article.getCoverUrl());
         dto.setNickname(author.getNickname());
         dto.setAvatar(author.getAvatar());
-
-        // 从 Redis 获取实时浏览量（否则用数据库的）
-        String redisView = stringRedisTemplate.opsForValue().get("article:view:" + articleId);
-        dto.setViewCount(redisView != null ? Long.parseLong(redisView) : article.getViewCount());
-
         dto.setCreateTime(article.getCreateTime());
 
-        // 写缓存（不包含 viewCount，viewCount 由 Redis 单独维护）
+        // 计算 viewCount：数据库值 + Redis 增量
+        Long dbView = article.getViewCount() != null ? article.getViewCount() : 0L;
+        String redisView = stringRedisTemplate.opsForValue().get("article:view:" + articleId);
+        Long redisViewLong = redisView != null ? Long.parseLong(redisView) : 0L;
+        dto.setViewCount(dbView + redisViewLong);
+
+        dto.setLikeCount(article.getLikeCount() != null ? article.getLikeCount() : 0L);
+        dto.setCommentCount(article.getCommentCount() != null ? article.getCommentCount() : 0L);
+
+        // 写缓存（不包含 viewCount，viewCount 是动态计算的）
         redisTemplate.opsForValue().set(redisKey, dto, 30, TimeUnit.MINUTES);
 
         return dto;

@@ -23,6 +23,8 @@ CREATE TABLE articles (
                           is_top BOOLEAN DEFAULT FALSE,
                           is_recommend BOOLEAN DEFAULT FALSE,
                           view_count BIGINT DEFAULT 0,
+                          like_count BIGINT DEFAULT 0,
+                          comment_count BIGINT DEFAULT 0,
                           status ENUM('PUBLISHED', 'DELETED') DEFAULT 'PUBLISHED',
                           create_time DATETIME DEFAULT CURRENT_TIMESTAMP,
                           update_time DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP

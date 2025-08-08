@@ -22,6 +22,8 @@ public class Article {
     private Boolean isTop;
     private Boolean isRecommend;
     private Long viewCount;
+    private Long likeCount;
+    private Long commentCount;
     private String status;
     private LocalDateTime createTime;
     private LocalDateTime updateTime;

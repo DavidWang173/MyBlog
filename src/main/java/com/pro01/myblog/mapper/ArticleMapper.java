@@ -1,5 +1,6 @@
 package com.pro01.myblog.mapper;
 
+import com.pro01.myblog.dto.ArticleHotDTO;
 import com.pro01.myblog.dto.ArticleListDTO;
 import com.pro01.myblog.pojo.Article;
 import org.apache.ibatis.annotations.*;
@@ -16,7 +17,16 @@ public interface ArticleMapper {
     void insertArticle(Article article);
 
     // 查看文章详情
-    @Select("SELECT * FROM articles WHERE id = #{id} AND status = 'PUBLISHED'")
+    @Select("""
+    SELECT id, user_id, title, content, summary, category, cover_url,
+           is_top, is_recommend,
+           IFNULL(view_count, 0) AS view_count,
+           IFNULL(like_count, 0) AS like_count,
+           IFNULL(comment_count, 0) AS comment_count,
+           status, create_time, update_time
+    FROM articles
+    WHERE id = #{id} AND status = 'PUBLISHED'
+""")
     Article findById(@Param("id") Long id);
 
     // 记录浏览量
@@ -35,4 +45,5 @@ public interface ArticleMapper {
 
     @Select("SELECT COUNT(*) FROM articles WHERE status = 'PUBLISHED'")
     long countArticles();
+
 }

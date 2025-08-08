@@ -1,6 +1,7 @@
 package com.pro01.myblog.controller;
 
 import com.pro01.myblog.dto.ArticleDetailDTO;
+import com.pro01.myblog.dto.ArticleHotDTO;
 import com.pro01.myblog.dto.ArticleListDTO;
 import com.pro01.myblog.dto.ArticlePublishDTO;
 import com.pro01.myblog.pojo.PageResult;
@@ -13,6 +14,8 @@ import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
+
+import java.util.List;
 
 @RestController
 @RequestMapping("/article")
@@ -67,4 +70,5 @@ public class ArticleController {
         PageResult<ArticleListDTO> result = articleService.getArticleList(page, pageSize);
         return Result.success(result);
     }
+
 }

@@ -15,5 +15,7 @@ public class ArticleDetailDTO {
     private String nickname;      // 作者昵称
     private String avatar;        // 作者头像
     private Long viewCount;
+    private Long likeCount;
+    private Long commentCount;
     private LocalDateTime createTime;
 }
