@@ -35,7 +35,7 @@ public interface ArticleMapper {
 
     // 查看文章列表
     @Select("SELECT a.id, a.title, a.summary, a.category, a.cover_url, " +
-            "a.view_count, a.create_time, u.nickname, u.avatar " +
+            "a.view_count, a.like_count, a.comment_count, a.create_time, u.nickname, u.avatar " +
             "FROM articles a " +
             "JOIN users u ON a.user_id = u.id " +
             "WHERE a.status = 'PUBLISHED' " +
