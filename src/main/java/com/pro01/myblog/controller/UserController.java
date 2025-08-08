@@ -3,6 +3,7 @@ package com.pro01.myblog.controller;
 import com.pro01.myblog.dto.*;
 import com.pro01.myblog.pojo.Result;
 import com.pro01.myblog.service.UserService;
+import com.pro01.myblog.utils.RequestUtil;
 import com.pro01.myblog.utils.TokenUtil;
 import jakarta.annotation.Resource;
 import jakarta.servlet.http.HttpServletRequest;
@@ -35,7 +36,8 @@ public class UserController {
     @PostMapping("/update")
     public Result<Void> updateUserInfo(@RequestBody UserUpdateDTO dto,
                                        HttpServletRequest request) {
-        Long userId = TokenUtil.getUserId(request);
+//        Long userId = TokenUtil.getUserId(request);
+        Long userId = RequestUtil.getUserId(request);
         userService.updateUserInfo(userId, dto);
         return Result.success();
     }
@@ -43,7 +45,8 @@ public class UserController {
     // 查看个人信息
     @GetMapping("/info")
     public Result<UserInfoDTO> getUserInfo(HttpServletRequest request) {
-        Long userId = TokenUtil.getUserId(request);
+//        Long userId = TokenUtil.getUserId(request);
+        Long userId = RequestUtil.getUserId(request);
         UserInfoDTO userInfo = userService.getUserInfo(userId);
         return Result.success(userInfo);
     }
@@ -52,7 +55,8 @@ public class UserController {
     @PostMapping("/avatar")
     public Result<String> uploadAvatar(@RequestParam("file") MultipartFile file,
                                        HttpServletRequest request) {
-        Long userId = TokenUtil.getUserId(request);
+//        Long userId = TokenUtil.getUserId(request);
+        Long userId = RequestUtil.getUserId(request);
         String avatarUrl = userService.uploadAvatar(userId, file);
         return Result.success(avatarUrl);
     }
