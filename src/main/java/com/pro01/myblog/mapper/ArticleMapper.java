@@ -46,4 +46,8 @@ public interface ArticleMapper {
     @Select("SELECT COUNT(*) FROM articles WHERE status = 'PUBLISHED'")
     long countArticles();
 
+    List<ArticleHotDTO> findHotArticlesByIds(@Param("ids") List<Long> ids);
+
+    @Select("SELECT * FROM articles WHERE status = 'PUBLISHED'")
+    List<Article> findAllPublished();
 }

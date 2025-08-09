@@ -23,4 +23,6 @@ public interface ArticleService {
     // 查看文章列表
     PageResult<ArticleListDTO> getArticleList(int page, int pageSize);
 
+    // 热门文章榜单
+    List<ArticleHotDTO> getHotArticles();
 }

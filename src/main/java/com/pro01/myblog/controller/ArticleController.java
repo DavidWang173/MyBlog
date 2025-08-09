@@ -71,4 +71,9 @@ public class ArticleController {
         return Result.success(result);
     }
 
+    // 热门文章榜单
+    @GetMapping("/popular")
+    public Result<List<ArticleHotDTO>> getHotArticles() {
+        return Result.success(articleService.getHotArticles());
+    }
 }

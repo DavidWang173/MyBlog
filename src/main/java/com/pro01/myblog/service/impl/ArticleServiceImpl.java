@@ -194,4 +194,27 @@ public class ArticleServiceImpl implements ArticleService {
 
         return PageResult.of(total, dtoList, page, pageSize);
     }
+
+    // 热门文章榜单
+    @Override
+    public List<ArticleHotDTO> getHotArticles() {
+        Set<String> idSet = stringRedisTemplate.opsForZSet()
+                .reverseRange("article:hot", 0, 9);
+
+        if (idSet == null || idSet.isEmpty()) {
+            return Collections.emptyList();
+        }
+
+        List<Long> ids = idSet.stream().map(Long::valueOf).collect(Collectors.toList());
+        List<ArticleHotDTO> articles = articleMapper.findHotArticlesByIds(ids);
+
+        // 保证返回顺序一致
+        Map<Long, ArticleHotDTO> map = articles.stream()
+                .collect(Collectors.toMap(ArticleHotDTO::getId, a -> a));
+
+        return ids.stream()
+                .map(map::get)
+                .filter(Objects::nonNull)
+                .collect(Collectors.toList());
+    }
 }
