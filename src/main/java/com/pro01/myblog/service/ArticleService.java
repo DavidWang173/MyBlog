@@ -29,4 +29,11 @@ public interface ArticleService {
     // 删除文章
     boolean deleteByUser(Long articleId, Long userId);
     boolean deleteByAdmin(Long articleId);
+
+    // 推荐/取消推荐文章
+    boolean recommendArticle(Long id);
+    boolean cancelRecommendArticle(Long id);
+
+    // 推荐列表
+    PageResult<ArticleListDTO> getRecommendedArticles(int page, int pageSize);
 }

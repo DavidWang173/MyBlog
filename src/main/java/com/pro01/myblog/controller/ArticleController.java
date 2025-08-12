@@ -83,4 +83,13 @@ public class ArticleController {
         boolean success = articleService.deleteByUser(id, userId);
         return success ? Result.success() : Result.error("删除失败：无权限或文章不存在");
     }
+
+    // 推荐列表
+    @GetMapping("/recommend")
+    public Result<PageResult<ArticleListDTO>> getRecommendedArticles(
+            @RequestParam(defaultValue = "1") int page,
+            @RequestParam(defaultValue = "10") int pageSize) {
+        PageResult<ArticleListDTO> result = articleService.getRecommendedArticles(page, pageSize);
+        return Result.success(result);
+    }
 }

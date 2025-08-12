@@ -59,4 +59,35 @@ public interface ArticleMapper {
     @Select("SELECT * FROM articles WHERE id = #{id} AND status = 'PUBLISHED'")
     Article findPublishedById(@Param("id") Long id);
 
+    // 推荐/取消推荐文章
+    @Update("UPDATE articles SET is_recommend = TRUE WHERE id = #{id}")
+    int recommendArticle(@Param("id") Long id);
+
+    @Update("UPDATE articles SET is_recommend = FALSE WHERE id = #{id}")
+    int cancelRecommendArticle(@Param("id") Long id);
+
+    @Select("SELECT id FROM articles WHERE id = #{id} AND status = 'PUBLISHED'")
+    Long checkArticleExists(@Param("id") Long id);
+
+    // 推荐列表
+    @Select("""
+    SELECT 
+        a.id, a.title, a.summary, a.category, a.cover_url,
+        u.nickname, u.avatar,
+        a.view_count, a.like_count, a.comment_count,
+        a.create_time
+    FROM articles a
+    JOIN users u ON a.user_id = u.id
+    WHERE a.is_recommend = TRUE AND a.status = 'PUBLISHED'
+    ORDER BY a.create_time DESC
+    LIMIT #{offset}, #{limit}
+""")
+    List<ArticleListDTO> findRecommendedArticles(@Param("offset") int offset, @Param("limit") int limit);
+
+    @Select("""
+    SELECT COUNT(*) 
+    FROM articles 
+    WHERE is_recommend = TRUE AND status = 'PUBLISHED'
+""")
+    long countRecommendedArticles();
 }

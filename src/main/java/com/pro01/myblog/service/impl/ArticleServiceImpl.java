@@ -246,4 +246,26 @@ public class ArticleServiceImpl implements ArticleService {
         redisTemplate.delete("article:detail:" + articleId);
         stringRedisTemplate.opsForZSet().remove("article:hot", String.valueOf(articleId));
     }
+
+    // 推荐/取消推荐文章
+    @Override
+    public boolean recommendArticle(Long id) {
+        if (articleMapper.checkArticleExists(id) == null) return false;
+        return articleMapper.recommendArticle(id) > 0;
+    }
+
+    @Override
+    public boolean cancelRecommendArticle(Long id) {
+        if (articleMapper.checkArticleExists(id) == null) return false;
+        return articleMapper.cancelRecommendArticle(id) > 0;
+    }
+
+    // 推荐列表
+    @Override
+    public PageResult<ArticleListDTO> getRecommendedArticles(int page, int pageSize) {
+        int offset = (page - 1) * pageSize;
+        List<ArticleListDTO> records = articleMapper.findRecommendedArticles(offset, pageSize);
+        long total = articleMapper.countRecommendedArticles();
+        return PageResult.of(total, records, page, pageSize);
+    }
 }
