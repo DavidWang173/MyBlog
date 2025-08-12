@@ -90,4 +90,8 @@ public interface ArticleMapper {
     WHERE is_recommend = TRUE AND status = 'PUBLISHED'
 """)
     long countRecommendedArticles();
+
+    // 置顶/取消置顶文章
+    @Update("UPDATE articles SET is_top = #{isTop} WHERE id = #{id}")
+    void updateTopStatus(@Param("id") Long id, @Param("isTop") boolean isTop);
 }

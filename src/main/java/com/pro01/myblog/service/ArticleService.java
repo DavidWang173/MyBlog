@@ -36,4 +36,7 @@ public interface ArticleService {
 
     // 推荐列表
     PageResult<ArticleListDTO> getRecommendedArticles(int page, int pageSize);
+
+    // 置顶文章
+    void updateTopStatus(Long articleId, boolean isTop);
 }

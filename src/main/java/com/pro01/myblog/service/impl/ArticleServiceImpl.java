@@ -268,4 +268,14 @@ public class ArticleServiceImpl implements ArticleService {
         long total = articleMapper.countRecommendedArticles();
         return PageResult.of(total, records, page, pageSize);
     }
+
+    // 置顶/取消置顶文章
+    @Override
+    public void updateTopStatus(Long articleId, boolean isTop) {
+        Article article = articleMapper.findById(articleId);
+        if (article == null || article.getStatus().equals("DELETED")) {
+            throw new IllegalArgumentException("文章不存在或已删除");
+        }
+        articleMapper.updateTopStatus(articleId, isTop);
+    }
 }
