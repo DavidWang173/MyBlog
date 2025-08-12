@@ -1,9 +1,6 @@
 package com.pro01.myblog.service;
 
-import com.pro01.myblog.dto.ArticleDetailDTO;
-import com.pro01.myblog.dto.ArticleHotDTO;
-import com.pro01.myblog.dto.ArticleListDTO;
-import com.pro01.myblog.dto.ArticlePublishDTO;
+import com.pro01.myblog.dto.*;
 import com.pro01.myblog.pojo.PageResult;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -35,7 +32,7 @@ public interface ArticleService {
     boolean cancelRecommendArticle(Long id);
 
     // 推荐列表
-    PageResult<ArticleListDTO> getRecommendedArticles(int page, int pageSize);
+    PageResult<ArticleRecommendDTO> getRecommendedArticles(int page, int pageSize);
 
     // 置顶文章
     void updateTopStatus(Long articleId, boolean isTop);

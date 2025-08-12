@@ -5,7 +5,7 @@ import lombok.Data;
 import java.time.LocalDateTime;
 
 @Data
-public class ArticleListDTO {
+public class ArticleRecommendDTO {
     private Long id;
     private String title;
     private String summary;
@@ -17,5 +17,4 @@ public class ArticleListDTO {
     private Long likeCount;
     private Long commentCount;
     private LocalDateTime createTime;
-    private Boolean isTop;
 }

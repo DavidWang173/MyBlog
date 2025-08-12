@@ -1,16 +1,11 @@
 package com.pro01.myblog.controller;
 
 import com.pro01.myblog.annotation.LoginRequired;
-import com.pro01.myblog.dto.ArticleDetailDTO;
-import com.pro01.myblog.dto.ArticleHotDTO;
-import com.pro01.myblog.dto.ArticleListDTO;
-import com.pro01.myblog.dto.ArticlePublishDTO;
+import com.pro01.myblog.dto.*;
 import com.pro01.myblog.pojo.PageResult;
 import com.pro01.myblog.pojo.Result;
 import com.pro01.myblog.service.ArticleService;
 import com.pro01.myblog.utils.RequestUtil;
-import com.pro01.myblog.utils.TokenUtil;
-import jakarta.annotation.Resource;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
@@ -86,10 +81,10 @@ public class ArticleController {
 
     // 推荐列表
     @GetMapping("/recommend")
-    public Result<PageResult<ArticleListDTO>> getRecommendedArticles(
+    public Result<PageResult<ArticleRecommendDTO>> getRecommendedArticles(
             @RequestParam(defaultValue = "1") int page,
             @RequestParam(defaultValue = "10") int pageSize) {
-        PageResult<ArticleListDTO> result = articleService.getRecommendedArticles(page, pageSize);
+        PageResult<ArticleRecommendDTO> result = articleService.getRecommendedArticles(page, pageSize);
         return Result.success(result);
     }
 }

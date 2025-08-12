@@ -2,6 +2,7 @@ package com.pro01.myblog.mapper;
 
 import com.pro01.myblog.dto.ArticleHotDTO;
 import com.pro01.myblog.dto.ArticleListDTO;
+import com.pro01.myblog.dto.ArticleRecommendDTO;
 import com.pro01.myblog.pojo.Article;
 import org.apache.ibatis.annotations.*;
 
@@ -35,11 +36,12 @@ public interface ArticleMapper {
 
     // 查看文章列表
     @Select("SELECT a.id, a.title, a.summary, a.category, a.cover_url, " +
-            "a.view_count, a.like_count, a.comment_count, a.create_time, u.nickname, u.avatar " +
+            "a.view_count, a.like_count, a.comment_count, a.create_time, a.is_top, " +  // ✅ 添加 a.is_top
+            "u.nickname, u.avatar " +
             "FROM articles a " +
             "JOIN users u ON a.user_id = u.id " +
             "WHERE a.status = 'PUBLISHED' " +
-            "ORDER BY a.create_time DESC " +
+            "ORDER BY a.is_top DESC, a.create_time DESC " +
             "LIMIT #{offset}, #{limit}")
     List<ArticleListDTO> findArticles(@Param("offset") int offset, @Param("limit") int limit);
 
@@ -82,7 +84,7 @@ public interface ArticleMapper {
     ORDER BY a.create_time DESC
     LIMIT #{offset}, #{limit}
 """)
-    List<ArticleListDTO> findRecommendedArticles(@Param("offset") int offset, @Param("limit") int limit);
+    List<ArticleRecommendDTO> findRecommendedArticles(@Param("offset") int offset, @Param("limit") int limit);
 
     @Select("""
     SELECT COUNT(*) 

@@ -1,17 +1,13 @@
 package com.pro01.myblog.service.impl;
 
 import com.pro01.myblog.config.CoverProperties;
-import com.pro01.myblog.dto.ArticleDetailDTO;
-import com.pro01.myblog.dto.ArticleHotDTO;
-import com.pro01.myblog.dto.ArticleListDTO;
-import com.pro01.myblog.dto.ArticlePublishDTO;
+import com.pro01.myblog.dto.*;
 import com.pro01.myblog.mapper.ArticleMapper;
 import com.pro01.myblog.mapper.UserMapper;
 import com.pro01.myblog.pojo.Article;
 import com.pro01.myblog.pojo.PageResult;
 import com.pro01.myblog.pojo.User;
 import com.pro01.myblog.service.ArticleService;
-import jakarta.annotation.Resource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.StringRedisTemplate;
@@ -262,9 +258,9 @@ public class ArticleServiceImpl implements ArticleService {
 
     // 推荐列表
     @Override
-    public PageResult<ArticleListDTO> getRecommendedArticles(int page, int pageSize) {
+    public PageResult<ArticleRecommendDTO> getRecommendedArticles(int page, int pageSize) {
         int offset = (page - 1) * pageSize;
-        List<ArticleListDTO> records = articleMapper.findRecommendedArticles(offset, pageSize);
+        List<ArticleRecommendDTO> records = articleMapper.findRecommendedArticles(offset, pageSize);
         long total = articleMapper.countRecommendedArticles();
         return PageResult.of(total, records, page, pageSize);
     }
