@@ -1,5 +1,6 @@
 package com.pro01.myblog.controller;
 
+import com.pro01.myblog.annotation.LoginRequired;
 import com.pro01.myblog.dto.*;
 import com.pro01.myblog.pojo.Result;
 import com.pro01.myblog.service.UserService;
@@ -33,6 +34,7 @@ public class UserController {
     }
 
     // 修改个人信息
+    @LoginRequired
     @PostMapping("/update")
     public Result<Void> updateUserInfo(@RequestBody UserUpdateDTO dto,
                                        HttpServletRequest request) {
@@ -43,6 +45,7 @@ public class UserController {
     }
 
     // 查看个人信息
+    @LoginRequired
     @GetMapping("/info")
     public Result<UserInfoDTO> getUserInfo(HttpServletRequest request) {
 //        Long userId = TokenUtil.getUserId(request);
@@ -52,10 +55,10 @@ public class UserController {
     }
 
     // 上传头像
+    @LoginRequired
     @PostMapping("/avatar")
     public Result<String> uploadAvatar(@RequestParam("file") MultipartFile file,
                                        HttpServletRequest request) {
-//        Long userId = TokenUtil.getUserId(request);
         String contentType = file.getContentType();
         if (contentType == null || !contentType.startsWith("image/")) {
             return Result.error("只能上传图片文件");

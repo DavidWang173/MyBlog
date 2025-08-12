@@ -1,5 +1,6 @@
 package com.pro01.myblog.controller;
 
+import com.pro01.myblog.annotation.LoginRequired;
 import com.pro01.myblog.dto.ArticleDetailDTO;
 import com.pro01.myblog.dto.ArticleHotDTO;
 import com.pro01.myblog.dto.ArticleListDTO;
@@ -25,11 +26,7 @@ public class ArticleController {
     private ArticleService articleService;
 
     // 上传封面
-//    @PostMapping("/cover")
-//    public Result<String> uploadCover(@RequestParam("file") MultipartFile file) {
-//        String url = articleService.uploadCover(file);
-//        return Result.success(url);
-//    }
+    @LoginRequired
     @PostMapping("/cover")
     public Result<String> uploadCover(@RequestParam("file") MultipartFile file,
                                       HttpServletRequest request) {
@@ -48,6 +45,7 @@ public class ArticleController {
     }
 
     // 发布文章
+    @LoginRequired
     @PostMapping("/publish")
     public Result<Void> publish(@RequestBody ArticlePublishDTO dto, HttpServletRequest request) {
 //        Long userId = TokenUtil.getUserId(request);
@@ -75,5 +73,14 @@ public class ArticleController {
     @GetMapping("/popular")
     public Result<List<ArticleHotDTO>> getHotArticles() {
         return Result.success(articleService.getHotArticles());
+    }
+
+    // 用户删除文章
+    @LoginRequired
+    @DeleteMapping("/{articleId}")
+    public Result<?> deleteMyArticle(@PathVariable("articleId") Long id, HttpServletRequest request) {
+        Long userId = RequestUtil.getUserId(request);
+        boolean success = articleService.deleteByUser(id, userId);
+        return success ? Result.success() : Result.error("删除失败：无权限或文章不存在");
     }
 }

@@ -217,4 +217,33 @@ public class ArticleServiceImpl implements ArticleService {
                 .filter(Objects::nonNull)
                 .collect(Collectors.toList());
     }
+
+    // 删除文章
+    @Override
+    public boolean deleteByUser(Long articleId, Long userId) {
+        Article article = articleMapper.findPublishedById(articleId);
+        if (article == null || !article.getUserId().equals(userId)) {
+            return false;
+        }
+        int rows = articleMapper.softDeleteArticle(articleId);
+        clearArticleCache(articleId);
+        return rows > 0;
+    }
+
+    @Override
+    public boolean deleteByAdmin(Long articleId) {
+        Article article = articleMapper.findPublishedById(articleId);
+        if (article == null) {
+            return false;
+        }
+        int rows = articleMapper.softDeleteArticle(articleId);
+        clearArticleCache(articleId);
+        return rows > 0;
+    }
+
+    private void clearArticleCache(Long articleId) {
+        stringRedisTemplate.delete("article:view:" + articleId);
+        redisTemplate.delete("article:detail:" + articleId);
+        stringRedisTemplate.opsForZSet().remove("article:hot", String.valueOf(articleId));
+    }
 }

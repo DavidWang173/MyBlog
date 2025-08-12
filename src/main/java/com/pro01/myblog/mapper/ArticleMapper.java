@@ -46,8 +46,17 @@ public interface ArticleMapper {
     @Select("SELECT COUNT(*) FROM articles WHERE status = 'PUBLISHED'")
     long countArticles();
 
+    // 热门文章榜单
     List<ArticleHotDTO> findHotArticlesByIds(@Param("ids") List<Long> ids);
 
     @Select("SELECT * FROM articles WHERE status = 'PUBLISHED'")
     List<Article> findAllPublished();
+
+    // 删除文章
+    @Update("UPDATE articles SET status = 'DELETED' WHERE id = #{id}")
+    int softDeleteArticle(@Param("id") Long id);
+
+    @Select("SELECT * FROM articles WHERE id = #{id} AND status = 'PUBLISHED'")
+    Article findPublishedById(@Param("id") Long id);
+
 }

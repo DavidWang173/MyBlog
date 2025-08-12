@@ -25,4 +25,8 @@ public interface ArticleService {
 
     // 热门文章榜单
     List<ArticleHotDTO> getHotArticles();
+
+    // 删除文章
+    boolean deleteByUser(Long articleId, Long userId);
+    boolean deleteByAdmin(Long articleId);
 }
