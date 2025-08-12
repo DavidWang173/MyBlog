@@ -56,11 +56,27 @@ public class ArticleController {
         return Result.success(dto);
     }
 
-    // 查看文章列表
+    // 查看文章列表(全部)
     @GetMapping("/list")
     public Result<PageResult<ArticleListDTO>> list(@RequestParam(defaultValue = "1") int page,
                                                    @RequestParam(defaultValue = "10") int pageSize) {
         PageResult<ArticleListDTO> result = articleService.getArticleList(page, pageSize);
+        return Result.success(result);
+    }
+
+    // 查看非置顶文章列表
+    @GetMapping("/list/normal")
+    public Result<PageResult<ArticleListDTO>> listNormalArticles(@RequestParam(defaultValue = "1") int page,
+                                                                 @RequestParam(defaultValue = "10") int pageSize) {
+        PageResult<ArticleListDTO> result = articleService.getNormalArticleList(page, pageSize);
+        return Result.success(result);
+    }
+
+    // 查看置顶文章列表
+    @GetMapping("/list/top")
+    public Result<PageResult<ArticleListDTO>> listTopArticles(@RequestParam(defaultValue = "1") int page,
+                                                              @RequestParam(defaultValue = "3") int pageSize) {
+        PageResult<ArticleListDTO> result = articleService.getTopArticleList(page, pageSize);
         return Result.success(result);
     }
 

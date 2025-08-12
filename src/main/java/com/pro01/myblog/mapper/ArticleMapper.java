@@ -48,6 +48,32 @@ public interface ArticleMapper {
     @Select("SELECT COUNT(*) FROM articles WHERE status = 'PUBLISHED'")
     long countArticles();
 
+    // 查看非置顶文章列表
+    @Select("SELECT a.id, a.title, a.summary, a.category, a.cover_url, " +
+            "a.view_count, a.like_count, a.comment_count, a.create_time, a.is_top, u.nickname, u.avatar " +
+            "FROM articles a " +
+            "JOIN users u ON a.user_id = u.id " +
+            "WHERE a.status = 'PUBLISHED' AND a.is_top = FALSE " +
+            "ORDER BY a.create_time DESC " +
+            "LIMIT #{offset}, #{limit}")
+    List<ArticleListDTO> findNormalArticles(@Param("offset") int offset, @Param("limit") int limit);
+
+    @Select("SELECT COUNT(*) FROM articles WHERE status = 'PUBLISHED' AND is_top = FALSE")
+    long countNormalArticles();
+
+    // 查看置顶文章列表
+    @Select("SELECT a.id, a.title, a.summary, a.category, a.cover_url, " +
+            "a.view_count, a.like_count, a.comment_count, a.create_time, a.is_top, u.nickname, u.avatar " +
+            "FROM articles a " +
+            "JOIN users u ON a.user_id = u.id " +
+            "WHERE a.status = 'PUBLISHED' AND a.is_top = TRUE " +
+            "ORDER BY a.create_time DESC " +
+            "LIMIT #{offset}, #{limit}")
+    List<ArticleListDTO> findTopArticles(@Param("offset") int offset, @Param("limit") int limit);
+
+    @Select("SELECT COUNT(*) FROM articles WHERE status = 'PUBLISHED' AND is_top = TRUE")
+    long countTopArticles();
+
     // 热门文章榜单
     List<ArticleHotDTO> findHotArticlesByIds(@Param("ids") List<Long> ids);
 

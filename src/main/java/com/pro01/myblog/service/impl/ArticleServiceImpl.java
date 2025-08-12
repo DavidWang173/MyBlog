@@ -191,6 +191,26 @@ public class ArticleServiceImpl implements ArticleService {
         return PageResult.of(total, dtoList, page, pageSize);
     }
 
+    // 查看非置顶文章列表
+    @Override
+    public PageResult<ArticleListDTO> getNormalArticleList(int page, int pageSize) {
+        int offset = (page - 1) * pageSize;
+        List<ArticleListDTO> dtoList = articleMapper.findNormalArticles(offset, pageSize);
+        long total = articleMapper.countNormalArticles();
+
+        return PageResult.of(total, dtoList, page, pageSize);
+    }
+
+    // 查看置顶文章列表
+    @Override
+    public PageResult<ArticleListDTO> getTopArticleList(int page, int pageSize) {
+        int offset = (page - 1) * pageSize;
+        List<ArticleListDTO> dtoList = articleMapper.findTopArticles(offset, pageSize);
+        long total = articleMapper.countTopArticles();
+
+        return PageResult.of(total, dtoList, page, pageSize);
+    }
+
     // 热门文章榜单
     @Override
     public List<ArticleHotDTO> getHotArticles() {
