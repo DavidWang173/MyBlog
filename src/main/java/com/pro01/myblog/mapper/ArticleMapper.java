@@ -122,4 +122,12 @@ public interface ArticleMapper {
     // 置顶/取消置顶文章
     @Update("UPDATE articles SET is_top = #{isTop} WHERE id = #{id}")
     void updateTopStatus(@Param("id") Long id, @Param("isTop") boolean isTop);
+
+    // 累加点赞数
+    @Update("UPDATE articles SET like_count = like_count + 1 WHERE id = #{id}")
+    void increaseLikeCount(@Param("id") Long articleId);
+
+    @Update("UPDATE articles SET like_count = like_count - 1 WHERE id = #{id} AND like_count > 0")
+    void decreaseLikeCount(@Param("id") Long articleId);
+
 }
