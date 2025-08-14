@@ -19,45 +19,64 @@ public class AuthInterceptor implements HandlerInterceptor {
     @Override
     public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) {
 
-        // 如果不是方法请求（如静态资源），直接放行
+        // 放行静态资源 / 非方法请求
         if (!(handler instanceof HandlerMethod)) {
             return true;
         }
 
-        Method method = ((HandlerMethod) handler).getMethod();
-
-        boolean needLogin = method.isAnnotationPresent(LoginRequired.class);
-        boolean needAdmin = method.isAnnotationPresent(AdminRequired.class);
-
-        // 如果不需要任何权限，直接放行
-        if (!needLogin && !needAdmin) {
+        // 放行 CORS 预检
+        if ("OPTIONS".equalsIgnoreCase(request.getMethod())) {
             return true;
         }
 
-        // 获取 Token
-        String token = request.getHeader("Authorization");
-        if (!StringUtils.hasText(token)) {
-            throw new UnauthorizedException("未登录，缺少 Token");
+        Method method = ((HandlerMethod) handler).getMethod();
+        boolean needLogin = method.isAnnotationPresent(LoginRequired.class);
+        boolean needAdmin = method.isAnnotationPresent(AdminRequired.class);
+
+        // 取 token（支持 Authorization: Bearer xxx，或 query 参数 token）
+        String token = extractToken(request);
+
+        // —— 第一步：只要带了 token，就尽量解析并注入 attribute（即使接口不要求登录）——
+        Long userId = null;
+        String role = null;
+        if (StringUtils.hasText(token)) {
+            Map<String, Object> claims = JwtUtil.parseToken(token);
+            if (claims != null && claims.get("userId") != null) {
+                userId = ((Number) claims.get("userId")).longValue();
+                Object r = claims.get("role");
+                role = (r == null ? null : r.toString());
+                request.setAttribute("userId", userId);
+                request.setAttribute("role", role);
+            }
         }
 
-        // 解析 Token
-        Map<String, Object> claims = JwtUtil.parseToken(token);
-        if (claims == null || claims.get("userId") == null) {
-            throw new UnauthorizedException("Token 无效或已过期");
+        // —— 第二步：仅当接口需要权限时，才做强校验 ——
+        if (needLogin || needAdmin) {
+            if (!StringUtils.hasText(token)) {
+                throw new UnauthorizedException("未登录，缺少 Token");
+            }
+            if (userId == null) {
+                throw new UnauthorizedException("Token 无效或已过期");
+            }
+            if (needAdmin && !"ADMIN".equals(role)) {
+                throw new ForbiddenException("权限不足，仅管理员可访问");
+            }
         }
 
-        // 提取 userId 和 role
-        Long userId = ((Number) claims.get("userId")).longValue();
-        String role = (String) claims.get("role");
+        return true;
+    }
 
-        request.setAttribute("userId", userId);
-        request.setAttribute("role", role);
-
-        // 如果需要管理员权限但不是 ADMIN，抛异常
-        if (needAdmin && !"ADMIN".equals(role)) {
-            throw new ForbiddenException("权限不足，仅管理员可访问");
+    private String extractToken(HttpServletRequest request) {
+        String auth = request.getHeader("Authorization");
+        if (StringUtils.hasText(auth)) {
+            if (auth.startsWith("Bearer ")) {
+                return auth.substring(7);
+            }
+            // 有些客户端直接塞 token，不带 Bearer，也兼容一下
+            return auth.trim();
         }
-
-        return true; // 放行
+        // 兼容 ?token=xxx 的场景（可选）
+        String t = request.getParameter("token");
+        return StringUtils.hasText(t) ? t.trim() : null;
     }
 }

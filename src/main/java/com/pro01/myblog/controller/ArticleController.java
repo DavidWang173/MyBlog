@@ -51,8 +51,10 @@ public class ArticleController {
 
     // 查看文章详情
     @GetMapping("/{articleId}")
-    public Result<ArticleDetailDTO> getArticleDetail(@PathVariable("articleId") Long id) {
-        ArticleDetailDTO dto = articleService.getArticleDetail(id);
+    public Result<ArticleDetailDTO> getArticleDetail(@PathVariable Long articleId,
+                                                     HttpServletRequest request) {
+        Long userId = RequestUtil.getUserId(request); // 未登录返回 null，自己已有工具就用自己的
+        ArticleDetailDTO dto = articleService.getArticleDetail(articleId, userId);
         return Result.success(dto);
     }
 

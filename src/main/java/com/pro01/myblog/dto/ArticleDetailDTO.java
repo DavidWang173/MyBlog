@@ -1,5 +1,6 @@
 package com.pro01.myblog.dto;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.Data;
 
 import java.time.LocalDateTime;
@@ -18,4 +19,7 @@ public class ArticleDetailDTO {
     private Long likeCount;
     private Long commentCount;
     private LocalDateTime createTime;
+
+    // 不进缓存，但会出现在 HTTP 响应里
+    private Boolean isLiked;
 }

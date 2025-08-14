@@ -2,15 +2,7 @@ package com.pro01.myblog.utils;
 
 import jakarta.servlet.http.HttpServletRequest;
 
-//public class RequestUtil {
-//    public static Long getUserId(HttpServletRequest request) {
-//        return (Long) request.getAttribute("userId");
-//    }
-//
-//    public static String getRole(HttpServletRequest request) {
-//        return (String) request.getAttribute("role");
-//    }
-//}
+
 public class RequestUtil {
 
     public static Long getUserId(HttpServletRequest request) {
@@ -30,9 +22,4 @@ public class RequestUtil {
         return v == null ? null : v.toString();
     }
 
-    // 便捷方法：判断管理员（大小写不敏感）
-//    public static boolean isAdmin(HttpServletRequest request) {
-//        String role = getRole(request);
-//        return role != null && "ADMIN".equalsIgnoreCase(role);
-//    }
 }

@@ -15,7 +15,7 @@ public interface ArticleService {
     void publishArticle(Long userId, ArticlePublishDTO dto);
 
     // 查看文章详情
-    ArticleDetailDTO getArticleDetail(Long articleId);
+    ArticleDetailDTO getArticleDetail(Long articleId, Long currentUserId);
 
     // 查看文章列表
     PageResult<ArticleListDTO> getArticleList(int page, int pageSize);
