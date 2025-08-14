@@ -18,6 +18,25 @@ public interface ArticleMapper {
     @Options(useGeneratedKeys = true, keyProperty = "id")
     void insertArticle(Article article);
 
+    // 修改文章
+    int updateArticleById(@Param("id") Long id,
+                           @Param("title") String title,
+                           @Param("content") String content,
+                           @Param("summary") String summary,
+                           @Param("category") String category,
+                           @Param("coverUrl") String coverUrl);
+
+    @Select("""
+    SELECT id, user_id, title, content, summary, category, cover_url,
+           IFNULL(view_count, 0) AS view_count,
+           IFNULL(like_count, 0) AS like_count,
+           IFNULL(comment_count, 0) AS comment_count,
+           status, create_time, update_time
+    FROM articles
+    WHERE id = #{id}
+""")
+    Article findByIdForUpdate(@Param("id") Long id);
+
     // 查看文章详情
     @Select("""
     SELECT id, user_id, title, content, summary, category, cover_url,

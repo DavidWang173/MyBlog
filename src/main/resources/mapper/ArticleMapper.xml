@@ -35,4 +35,16 @@
             #{it.id}
         </foreach>
     </update>
+
+    <update id="updateArticleById">
+        UPDATE articles
+        SET
+            title = #{title},
+            content = #{content},
+            summary = #{summary},
+            category = #{category},
+            cover_url = #{coverUrl},
+            update_time = NOW()
+        WHERE id = #{id}
+    </update>
 </mapper>

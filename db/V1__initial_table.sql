@@ -75,14 +75,19 @@ CREATE TABLE article_favorites (
 
 -- 评论表
 CREATE TABLE comments (
-                          id BIGINT PRIMARY KEY AUTO_INCREMENT,
-                          article_id BIGINT NOT NULL,
-                          user_id BIGINT NOT NULL,
-                          content TEXT NOT NULL,
-                          parent_id BIGINT DEFAULT NULL,
-                          create_time DATETIME DEFAULT CURRENT_TIMESTAMP,
-                          update_time DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
-);
+                          id           BIGINT PRIMARY KEY AUTO_INCREMENT,
+                          article_id   BIGINT NOT NULL,
+                          user_id      BIGINT NOT NULL,
+                          content      TEXT NOT NULL,
+                          parent_id    BIGINT DEFAULT NULL,
+                          create_time  DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                          update_time  DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    -- 索引：仅你要求的两个
+                          INDEX idx_article_time (article_id, create_time),
+                          INDEX idx_parent (parent_id)
+) ENGINE=InnoDB
+  DEFAULT CHARSET = utf8mb4
+  COLLATE = utf8mb4_general_ci;
 
 -- 评论点赞表
 CREATE TABLE comment_likes (

@@ -13,7 +13,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
+import com.pro01.myblog.exception.UnauthorizedException;
 
 import java.io.File;
 import java.time.LocalDateTime;
@@ -41,6 +43,10 @@ public class ArticleServiceImpl implements ArticleService {
 
     @Autowired
     private ArticleLikeMapper articleLikeMapper;
+
+    private static final Set<String> VALID_CATEGORIES = Set.of("TECH", "LIFE", "MUSIC", "MOVIE", "NOTE", "FRIENDS");
+
+    private String detailKey(Long id) { return "article:detail:" + id; }
 
     // 上传头像
     @Override
@@ -85,6 +91,79 @@ public class ArticleServiceImpl implements ArticleService {
         articleMapper.insertArticle(article);
 
         // TODO: 之后这里可以调用 elasticService.indexArticle(article);
+    }
+
+    // 修改文章
+    @Transactional
+    @Override
+    public void updateArticle(Long articleId, Long userId, ArticleUpdateDTO dto) {
+        // 1) 查原文（不限定状态）
+        Article origin = articleMapper.findByIdForUpdate(articleId);
+        if (origin == null || "DELETED".equalsIgnoreCase(origin.getStatus())) {
+            throw new IllegalArgumentException("文章不存在或已被删除");
+        }
+        if (!origin.getUserId().equals(userId)) {
+            throw new UnauthorizedException("无权修改此文章");
+        }
+
+        // 2) 规范化输入
+        String inTitle   = trimToNull(dto.getTitle());
+        String inContent = trimToNull(dto.getContent());
+        String inSummary = dto.getSummary(); // 允许为空，后面处理
+        String inCategory= trimToNull(dto.getCategory());
+        String inCover   = dto.getCoverUrl(); // 保留原语义：null=不传；""=清空；"nochange"=保持
+
+        // 3) 目标值：为空就继承原值
+        String title   = defaultIfNull(inTitle, origin.getTitle());
+        String content = defaultIfNull(inContent, origin.getContent());
+
+        // summary：传了就用；没传或空就从 content 截取
+        String summary = inSummary;
+        if (summary == null || summary.trim().isEmpty()) {
+            summary = content != null && content.length() > 120 ? content.substring(0, 120) : content;
+        }
+
+        // category：若传值则校验
+        String category = defaultIfNull(inCategory, origin.getCategory());
+        if (inCategory != null && !VALID_CATEGORIES.contains(inCategory)) {
+            throw new IllegalArgumentException("非法的文章分类");
+        }
+
+        // coverUrl：遵循你的三态逻辑
+        String coverUrl = origin.getCoverUrl();
+        if (inCover != null) {
+            if ("nochange".equalsIgnoreCase(inCover)) {
+                // 保持原值
+            } else if (inCover.trim().isEmpty()) {
+                coverUrl = null; // 清空
+            } else {
+                coverUrl = inCover; // 新值
+            }
+        }
+
+        // 4) 执行更新
+        int updated = articleMapper.updateArticleById(articleId, title, content, summary, category, coverUrl);
+        if (updated <= 0) {
+            throw new RuntimeException("更新失败，请重试");
+        }
+
+        // 5) 删缓存（最小集）
+        stringRedisTemplate.delete(detailKey(articleId));
+
+        // 如有其他相关缓存（比如列表、分类页、热门榜），这里可以视情况追加删除：
+        // stringRedisTemplate.delete("article:list:latest"); // 示例
+        // stringRedisTemplate.opsForZSet().remove("article:hot:zset", articleId.toString());
+    }
+
+    // —— 小工具 —— //
+    private static String trimToNull(String s) {
+        if (s == null) return null;
+        String t = s.trim();
+        return t.isEmpty() ? null : t;
+    }
+
+    private static String defaultIfNull(String val, String fallback) {
+        return val != null ? val : fallback;
     }
 
     // 查看文章详情

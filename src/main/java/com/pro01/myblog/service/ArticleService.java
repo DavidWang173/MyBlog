@@ -14,6 +14,9 @@ public interface ArticleService {
     // 发布文章
     void publishArticle(Long userId, ArticlePublishDTO dto);
 
+    // 修改文章
+    void updateArticle(Long articleId, Long userId, ArticleUpdateDTO dto);
+
     // 查看文章详情
     ArticleDetailDTO getArticleDetail(Long articleId, Long currentUserId);
 

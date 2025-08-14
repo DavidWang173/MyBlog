@@ -49,6 +49,17 @@ public class ArticleController {
         return Result.success();
     }
 
+    // 修改文章
+    @LoginRequired
+    @PutMapping("/update/{articleId}")
+    public Result<Void> updateArticle(@PathVariable Long articleId,
+                                      @RequestBody ArticleUpdateDTO dto,
+                                      HttpServletRequest request) {
+        Long userId = RequestUtil.getUserId(request);
+        articleService.updateArticle(articleId, userId, dto);
+        return Result.success();
+    }
+
     // 查看文章详情
     @GetMapping("/{articleId}")
     public Result<ArticleDetailDTO> getArticleDetail(@PathVariable Long articleId,
