@@ -38,6 +38,10 @@ public interface ArticleMapper {
     int updateViewCount(@Param("id") Long id, @Param("viewCount") Long viewCount);
     int updateViewCountBatch(@Param("list") List<ArticleViewPair> list);
 
+    // 获取点赞数量
+    @Select("SELECT IFNULL(like_count,0) FROM articles WHERE id = #{id}")
+    Long getLikeCount(@Param("id") Long articleId);
+
     // 查看文章列表
     @Select("SELECT a.id, a.title, a.summary, a.category, a.cover_url, " +
             "a.view_count, a.like_count, a.comment_count, a.create_time, a.is_top, " +  // ✅ 添加 a.is_top

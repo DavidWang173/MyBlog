@@ -1,6 +1,7 @@
 package com.pro01.myblog.controller;
 
 import com.pro01.myblog.annotation.LoginRequired;
+import com.pro01.myblog.dto.LikeResponse;
 import com.pro01.myblog.pojo.Result;
 import com.pro01.myblog.service.ArticleLikeService;
 import com.pro01.myblog.utils.RequestUtil;
@@ -17,17 +18,15 @@ public class ArticleLikeController {
 
     @LoginRequired
     @PostMapping("/{articleId}")
-    public Result<?> like(@PathVariable Long articleId, HttpServletRequest request) {
+    public Result<LikeResponse> like(@PathVariable Long articleId, HttpServletRequest request) {
         Long userId = RequestUtil.getUserId(request);
-        articleLikeService.likeArticle(userId, articleId);
-        return Result.success();
+        return Result.success(articleLikeService.likeArticle(userId, articleId));
     }
 
     @LoginRequired
     @DeleteMapping("/{articleId}")
-    public Result<?> unlike(@PathVariable Long articleId, HttpServletRequest request) {
+    public Result<LikeResponse> unlike(@PathVariable Long articleId, HttpServletRequest request) {
         Long userId = RequestUtil.getUserId(request);
-        articleLikeService.unlikeArticle(userId, articleId);
-        return Result.success();
+        return Result.success(articleLikeService.unlikeArticle(userId, articleId));
     }
 }

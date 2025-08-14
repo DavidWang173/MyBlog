@@ -1,10 +1,13 @@
 package com.pro01.myblog.service.impl;
 
+import com.pro01.myblog.dto.LikeResponse;
 import com.pro01.myblog.mapper.ArticleLikeMapper;
 import com.pro01.myblog.mapper.ArticleMapper;
 import com.pro01.myblog.service.ArticleLikeService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 public class ArticleLikeServiceImpl implements ArticleLikeService {
@@ -15,22 +18,34 @@ public class ArticleLikeServiceImpl implements ArticleLikeService {
     @Autowired
     private ArticleLikeMapper articleLikeMapper;
 
-    // 点赞
+    @Autowired
+    private StringRedisTemplate stringRedisTemplate;
+
+    private String detailKey(Long articleId) { return "article:detail:" + articleId; }
+
+    @Transactional
     @Override
-    public void likeArticle(Long userId, Long articleId) {
-        // 插入点赞记录（主键防重复）
+    public LikeResponse likeArticle(Long userId, Long articleId) {
         int inserted = articleLikeMapper.insertLike(userId, articleId);
-        if (inserted > 0) {
+        boolean likedNow = inserted > 0;
+        if (likedNow) {
             articleMapper.increaseLikeCount(articleId);
+            stringRedisTemplate.delete(detailKey(articleId));
         }
+        long likeCount = articleMapper.getLikeCount(articleId); // 直接查最新值
+        return new LikeResponse(likeCount, true);
     }
 
-    // 取消点赞
+    @Transactional
     @Override
-    public void unlikeArticle(Long userId, Long articleId) {
+    public LikeResponse unlikeArticle(Long userId, Long articleId) {
         int deleted = articleLikeMapper.deleteLike(userId, articleId);
-        if (deleted > 0) {
+        boolean unlikedNow = deleted > 0;
+        if (unlikedNow) {
             articleMapper.decreaseLikeCount(articleId);
+            stringRedisTemplate.delete(detailKey(articleId));
         }
+        long likeCount = articleMapper.getLikeCount(articleId);
+        return new LikeResponse(likeCount, false);
     }
 }
