@@ -14,4 +14,25 @@
             #{id}
         </foreach>
     </select>
+
+    <update id="updateViewCount">
+        UPDATE articles
+        SET view_count = #{viewCount}, update_time = NOW()
+        WHERE id = #{id}
+    </update>
+
+    <update id="updateViewCountBatchCase" parameterType="java.util.List">
+        UPDATE articles
+        SET
+        view_count = CASE id
+        <foreach collection="list" item="it">
+            WHEN #{it.id} THEN #{it.viewCount}
+        </foreach>
+        END,
+        update_time = NOW()
+        WHERE id IN
+        <foreach collection="list" item="it" open="(" separator="," close=")">
+            #{it.id}
+        </foreach>
+    </update>
 </mapper>

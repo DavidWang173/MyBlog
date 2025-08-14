@@ -4,6 +4,7 @@ import com.pro01.myblog.dto.ArticleHotDTO;
 import com.pro01.myblog.dto.ArticleListDTO;
 import com.pro01.myblog.dto.ArticleRecommendDTO;
 import com.pro01.myblog.pojo.Article;
+import com.pro01.myblog.pojo.ArticleViewPair;
 import org.apache.ibatis.annotations.*;
 
 import java.util.List;
@@ -30,9 +31,10 @@ public interface ArticleMapper {
 """)
     Article findById(@Param("id") Long id);
 
-    // 记录浏览量
-    @Update("UPDATE articles SET view_count = view_count + #{delta} WHERE id = #{id}")
-    void updateViewCount(@Param("id") Long id, @Param("delta") Long delta);
+    int updateViewCount(@Param("id") Long id, @Param("viewCount") Long viewCount);
+
+    //int updateViewCountBatch(@Param("list") List<ArticleViewPair> list);
+    int updateViewCountBatchCase(@Param("list") List<ArticleViewPair> list);
 
     // 查看文章列表
     @Select("SELECT a.id, a.title, a.summary, a.category, a.cover_url, " +

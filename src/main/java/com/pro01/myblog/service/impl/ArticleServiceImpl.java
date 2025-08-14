@@ -136,25 +136,36 @@ public class ArticleServiceImpl implements ArticleService {
 //
 //        return dto;
 //    }
+// ServiceImpl 里的核心逻辑
     @Override
     public ArticleDetailDTO getArticleDetail(Long articleId) {
-        String redisKey = "article:detail:" + articleId;
+        final String detailKey = "article:detail:" + articleId;     // 文章详情缓存（不含 viewCount）
+        final String viewKey   = "article:view:" + articleId;        // 浏览量总数（仅此保存总量，不设 TTL）
 
-        // 增加 Redis 浏览量计数（增量部分）
-        stringRedisTemplate.opsForValue().increment("article:view:" + articleId);
+        // 1) 先查详情缓存（不含 viewCount）
+        Object cached = redisTemplate.opsForValue().get(detailKey);
+        if (cached instanceof ArticleDetailDTO dto) {
+            // 2) 初始化浏览量（仅首次：将 DB 基数放到 Redis；若已存在则不变）
+            initViewCountIfAbsent(articleId, viewKey);
 
-        // 查数据库（即使缓存命中也需要数据库的持久 view_count）
+            // 3) 浏览量自增，直接用 INCR 的返回值作为最新总量
+            Long total = stringRedisTemplate.opsForValue().increment(viewKey);
+            dto.setViewCount(total != null ? total : 0L);
+
+            return dto; // 命中缓存不查库
+        }
+
+        // 4) 未命中缓存：查询数据库（只查一次文章 + 作者）
         Article article = articleMapper.findById(articleId);
         if (article == null) {
             throw new IllegalArgumentException("文章不存在");
         }
-
         User author = userMapper.findSimpleUserById(article.getUserId());
         if (author == null) {
             throw new IllegalArgumentException("作者不存在");
         }
 
-        // 构建 DTO
+        // 5) 组装 DTO（不把 viewCount 固化进缓存）
         ArticleDetailDTO dto = new ArticleDetailDTO();
         dto.setId(article.getId());
         dto.setTitle(article.getTitle());
@@ -164,21 +175,37 @@ public class ArticleServiceImpl implements ArticleService {
         dto.setCoverUrl(article.getCoverUrl());
         dto.setNickname(author.getNickname());
         dto.setAvatar(author.getAvatar());
-        dto.setCreateTime(article.getCreateTime());
-
-        // 计算 viewCount：数据库值 + Redis 增量
-        Long dbView = article.getViewCount() != null ? article.getViewCount() : 0L;
-        String redisView = stringRedisTemplate.opsForValue().get("article:view:" + articleId);
-        Long redisViewLong = redisView != null ? Long.parseLong(redisView) : 0L;
-        dto.setViewCount(dbView + redisViewLong);
-
         dto.setLikeCount(article.getLikeCount() != null ? article.getLikeCount() : 0L);
         dto.setCommentCount(article.getCommentCount() != null ? article.getCommentCount() : 0L);
+        dto.setCreateTime(article.getCreateTime());
 
-        // 写缓存（不包含 viewCount，viewCount 是动态计算的）
-        redisTemplate.opsForValue().set(redisKey, dto, 30, TimeUnit.MINUTES);
+        // 6) 缓存详情（不含 viewCount），只缓存 30 分钟即可
+        redisTemplate.opsForValue().set(detailKey, dto, 30, TimeUnit.MINUTES);
+
+        // 7) 初始化浏览量总数（SETNX，用 DB 基数做起点）
+        initViewCountIfAbsent(articleId, viewKey);
+
+        // 8) 浏览量 +1，并把 INCR 的返回值作为最新总量回填
+        Long total = stringRedisTemplate.opsForValue().increment(viewKey);
+        dto.setViewCount(total != null ? total : 0L);
 
         return dto;
+    }
+
+    /**
+     * 如果浏览量 key 不存在，则用数据库基数初始化一次（SETNX 语义）。
+     * 注意：只做“缺失补齐”，不覆盖已有值。
+     */
+    private void initViewCountIfAbsent(Long articleId, String viewKey) {
+        Boolean exists = stringRedisTemplate.hasKey(viewKey);
+        if (Boolean.TRUE.equals(exists)) {
+            return;
+        }
+        // 读一次 DB 的基数（用已有的 mapper），仅在 key 不存在时执行
+        Article base = articleMapper.findById(articleId);
+        long baseView = (base != null && base.getViewCount() != null) ? base.getViewCount() : 0L;
+        // setIfAbsent = SETNX
+        stringRedisTemplate.opsForValue().setIfAbsent(viewKey, String.valueOf(baseView));
     }
 
     // 查看文章列表
