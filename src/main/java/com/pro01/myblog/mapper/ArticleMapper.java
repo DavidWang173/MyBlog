@@ -31,10 +31,12 @@ public interface ArticleMapper {
 """)
     Article findById(@Param("id") Long id);
 
-    int updateViewCount(@Param("id") Long id, @Param("viewCount") Long viewCount);
-
-    //int updateViewCountBatch(@Param("list") List<ArticleViewPair> list);
+    // 更新文章浏览量(新)
     int updateViewCountBatchCase(@Param("list") List<ArticleViewPair> list);
+
+    // 更新文章浏览量(已废弃)
+    int updateViewCount(@Param("id") Long id, @Param("viewCount") Long viewCount);
+    int updateViewCountBatch(@Param("list") List<ArticleViewPair> list);
 
     // 查看文章列表
     @Select("SELECT a.id, a.title, a.summary, a.category, a.cover_url, " +

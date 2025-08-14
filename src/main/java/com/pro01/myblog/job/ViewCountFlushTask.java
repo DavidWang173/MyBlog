@@ -27,35 +27,33 @@ public class ViewCountFlushTask {
     private final ArticleMapper articleMapper;
 
     private static final String VIEW_KEY_PREFIX = "article:view:";
+    private static final String DIRTY_SET_KEY   = "article:view:dirty";
 
-    // 每2分钟落库一次，按需调整
     @Scheduled(cron = "0 */2 * * * ?")
     public void flushToDatabase() {
         long start = System.currentTimeMillis();
         try {
-            // 1) SCAN 拿到所有 article:view:* 的 key
-            List<String> keys = scanKeys(VIEW_KEY_PREFIX + "*");
-            if (CollectionUtils.isEmpty(keys)) {
-                return;
-            }
+            // 1) 拿脏集合中的 ID
+            Set<String> dirtyIds = stringRedisTemplate.opsForSet().members(DIRTY_SET_KEY);
+            if (dirtyIds == null || dirtyIds.isEmpty()) return;
 
-            // 2) pipeline 一次性取值
+            // 2) pipeline 获取浏览量
             List<Object> rawValues = stringRedisTemplate.executePipelined((RedisConnection conn) -> {
-                for (String k : keys) {
-                    conn.stringCommands().get(k.getBytes(StandardCharsets.UTF_8));
+                for (String id : dirtyIds) {
+                    String key = VIEW_KEY_PREFIX + id;
+                    conn.stringCommands().get(key.getBytes(StandardCharsets.UTF_8));
                 }
                 return null;
             });
 
             // 3) 组装成 (id, viewCount)
-            List<ArticleViewPair> pairs = new ArrayList<>(keys.size());
-            for (int i = 0; i < keys.size(); i++) {
-                String k = keys.get(i);
-                Object v = rawValues.get(i);
+            List<ArticleViewPair> pairs = new ArrayList<>(dirtyIds.size());
+            int index = 0;
+            for (String idStr : dirtyIds) {
+                Object v = rawValues.get(index++);
                 if (v == null) continue;
                 String sval = (v instanceof byte[]) ? new String((byte[]) v, StandardCharsets.UTF_8) : String.valueOf(v);
-
-                Long id = parseArticleId(k);
+                Long id = safeParseLong(idStr);
                 Long count = safeParseLong(sval);
                 if (id != null && count != null) {
                     pairs.add(new ArticleViewPair(id, count));
@@ -64,7 +62,7 @@ public class ViewCountFlushTask {
 
             if (pairs.isEmpty()) return;
 
-            // 4) 分批落库（防止 SQL 过长；这里每 500 条一批）
+            // 4) 分批落库
             final int BATCH = 500;
             for (int i = 0; i < pairs.size(); i += BATCH) {
                 int end = Math.min(i + BATCH, pairs.size());
@@ -72,38 +70,13 @@ public class ViewCountFlushTask {
                 articleMapper.updateViewCountBatchCase(sub);
             }
 
+            // 5) 清空脏集合
+            stringRedisTemplate.delete(DIRTY_SET_KEY);
+
             long cost = System.currentTimeMillis() - start;
             log.info("[ViewFlush] flushed {} keys to DB in {} ms", pairs.size(), cost);
         } catch (Exception e) {
             log.error("[ViewFlush] flush failed", e);
-        }
-    }
-
-    // 1) 非 pipeline 的 SCAN（显式使用 RedisCallback，避免 execute 重载二义性）
-    private List<String> scanKeys(String pattern) {
-        List<String> keys = new ArrayList<>();
-        stringRedisTemplate.execute((RedisCallback<Void>) connection -> {
-            // 注意：Cursor 需要 try-with-resources，并捕获 IOException
-            try (Cursor<byte[]> cursor = connection.scan(
-                    ScanOptions.scanOptions().match(pattern).count(1000).build())) {
-                while (cursor.hasNext()) {
-                    byte[] item = cursor.next();
-                    keys.add(new String(item, StandardCharsets.UTF_8));
-                }
-            } catch (Exception e) { // IOException/Runtime 都兜
-                throw new RuntimeException(e);
-            }
-            return null;
-        });
-        return keys;
-    }
-
-    private Long parseArticleId(String key) {
-        try {
-            int idx = key.lastIndexOf(':');
-            return Long.parseLong(key.substring(idx + 1));
-        } catch (Exception e) {
-            return null;
         }
     }
 
