@@ -48,6 +48,10 @@ public class ArticleServiceImpl implements ArticleService {
 
     private String detailKey(Long id) { return "article:detail:" + id; }
 
+    private static final String HOT_ZSET_KEY  = "article:hot";
+    private static final String HOT_LIST_KEY  = "article:hot:list:top10"; // 最终列表缓存
+    private static final long   HOT_LIST_TTL_SECONDS = 60;
+
     // 上传头像
     @Override
     public String uploadCover(MultipartFile file) {
@@ -150,6 +154,7 @@ public class ArticleServiceImpl implements ArticleService {
         // 5) 删缓存（最小集）
         stringRedisTemplate.delete(detailKey(articleId));
 
+        stringRedisTemplate.delete("article:hot:list:top10");
         // 如有其他相关缓存（比如列表、分类页、热门榜），这里可以视情况追加删除：
         // stringRedisTemplate.delete("article:list:latest"); // 示例
         // stringRedisTemplate.opsForZSet().remove("article:hot:zset", articleId.toString());
@@ -363,24 +368,42 @@ public class ArticleServiceImpl implements ArticleService {
     // 热门文章榜单
     @Override
     public List<ArticleHotDTO> getHotArticles() {
-        Set<String> idSet = stringRedisTemplate.opsForZSet()
-                .reverseRange("article:hot", 0, 9);
+        // 1) 先读最终列表缓存（超短缓存）
+        Object cached = redisTemplate.opsForValue().get(HOT_LIST_KEY);
+        if (cached instanceof List<?> list && !list.isEmpty() && list.get(0) instanceof ArticleHotDTO) {
+            @SuppressWarnings("unchecked")
+            List<ArticleHotDTO> hit = (List<ArticleHotDTO>) list;
+            return hit;
+        }
 
+        // 2) 未命中：按 ZSET 排名取前 10 个 id
+        Set<String> idSet = stringRedisTemplate.opsForZSet().reverseRange(HOT_ZSET_KEY, 0, 9);
         if (idSet == null || idSet.isEmpty()) {
+            // 回写一个空列表也可（看你喜好）；这里直接返回空
             return Collections.emptyList();
         }
 
-        List<Long> ids = idSet.stream().map(Long::valueOf).collect(Collectors.toList());
-        List<ArticleHotDTO> articles = articleMapper.findHotArticlesByIds(ids);
+        // 3) 回源 DB 拉卡片
+        List<Long> ids = idSet.stream().map(Long::valueOf).toList();
+        List<ArticleHotDTO> rows = articleMapper.findHotArticlesByIds(ids);
 
-        // 保证返回顺序一致
-        Map<Long, ArticleHotDTO> map = articles.stream()
+        // 4) 按 ZSET 顺序重排
+        Map<Long, ArticleHotDTO> map = rows.stream()
                 .collect(Collectors.toMap(ArticleHotDTO::getId, a -> a));
-
-        return ids.stream()
+        List<ArticleHotDTO> result = ids.stream()
                 .map(map::get)
                 .filter(Objects::nonNull)
                 .collect(Collectors.toList());
+
+        // 5) 写入 60s 超短缓存
+        if (!result.isEmpty()) {
+            redisTemplate.opsForValue().set(HOT_LIST_KEY, result, HOT_LIST_TTL_SECONDS, TimeUnit.SECONDS);
+        } else {
+            // 可选：缓存空列表 20-30s 防穿透（练手项目可忽略）
+            // redisTemplate.opsForValue().set(HOT_LIST_KEY, Collections.emptyList(), 30, TimeUnit.SECONDS);
+        }
+
+        return result;
     }
 
     // 删除文章
