@@ -14,5 +14,6 @@ import java.time.LocalDateTime;
 public class Tag {
     private Long id;
     private String name;
+    private boolean isSystem; // 是否为系统内置标签，系统内置标签不可删除
     private LocalDateTime createTime;
 }

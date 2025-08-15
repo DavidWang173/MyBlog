@@ -18,7 +18,7 @@ CREATE TABLE articles (
                           title VARCHAR(255) NOT NULL,
                           content TEXT NOT NULL,
                           summary TEXT,
-                          category ENUM('TECH', 'LIFE', 'MUSIC', 'MOVIE', 'NOTE', 'FRIENDS') NOT NULL,
+                          category ENUM('TECH', 'LIFE', 'NOTE') NOT NULL,
                           cover_url VARCHAR(255),
                           is_top BOOLEAN DEFAULT FALSE,
                           is_recommend BOOLEAN DEFAULT FALSE,
@@ -46,15 +46,18 @@ CREATE TABLE article_drafts (
 CREATE TABLE tags (
                       id BIGINT PRIMARY KEY AUTO_INCREMENT,
                       name VARCHAR(50) NOT NULL UNIQUE,
+                      is_system BOOLEAN DEFAULT TRUE COMMENT '是否系统内置标签',
                       create_time DATETIME DEFAULT CURRENT_TIMESTAMP
 );
 
--- 文章标签表
+-- 文章-标签多对多关联
 CREATE TABLE article_tags (
                               article_id BIGINT NOT NULL,
                               tag_id BIGINT NOT NULL,
                               create_time DATETIME DEFAULT CURRENT_TIMESTAMP,
-                              PRIMARY KEY (article_id, tag_id)
+                              PRIMARY KEY (article_id, tag_id),
+                              KEY idx_article_tags_article (article_id),
+                              KEY idx_article_tags_tag (tag_id)
 );
 
 -- 文章点赞表
