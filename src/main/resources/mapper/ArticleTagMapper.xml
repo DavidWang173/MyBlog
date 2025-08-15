@@ -14,4 +14,19 @@
         ON DUPLICATE KEY UPDATE create_time = VALUES(create_time)
     </insert>
 
+    <!-- 删除文章的所有标签关系 -->
+    <delete id="deleteByArticleId" parameterType="long">
+        DELETE FROM article_tags
+        WHERE article_id = #{articleId}
+    </delete>
+
+    <!-- 批量插入标签关系（幂等） -->
+    <insert id="insertBatchForUpdate">
+        INSERT INTO article_tags (article_id, tag_id, create_time)
+        VALUES
+        <foreach collection="tagIds" item="tid" separator=",">
+            (#{articleId}, #{tid}, NOW())
+        </foreach>
+        ON DUPLICATE KEY UPDATE create_time = VALUES(create_time)
+    </insert>
 </mapper>

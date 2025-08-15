@@ -209,7 +209,40 @@ public class ArticleServiceImpl implements ArticleService {
             throw new RuntimeException("更新失败，请重试");
         }
 
-        // 5) 删缓存（最小集）
+        // ===== 5) 标签三态 =====
+        List<String> inTags = dto.getTags(); // null / [] / ["Java","Redis",...]
+        if (inTags != null) {
+            if (inTags.isEmpty()) {
+                // 清空
+                articleTagMapper.deleteByArticleId(articleId);
+            } else {
+                // 替换：去空白、去重、限量（≤5），仅系统标签
+                List<String> cleaned = inTags.stream()
+                        .filter(Objects::nonNull)
+                        .map(String::trim)
+                        .filter(s -> !s.isEmpty())
+                        .distinct()
+                        .limit(5)
+                        .collect(Collectors.toList());
+
+                if (cleaned.isEmpty()) {
+                    articleTagMapper.deleteByArticleId(articleId);
+                } else {
+                    List<Long> tagIds = tagMapper.findSystemTagIdsByNames(cleaned);
+                    if (tagIds.size() != cleaned.size()) {
+                        // 有非法/不存在的标签名，策略二选一：
+                        // 1) 严格：直接报错
+                        throw new IllegalArgumentException("存在非法或非系统标签，请检查");
+                        // 2) 宽松：过滤非法的（如需则改成过滤后再写库）
+                    }
+                    // 整替：先删后插
+                    articleTagMapper.deleteByArticleId(articleId);
+                    articleTagMapper.insertBatchForUpdate(articleId, tagIds);
+                }
+            }
+        }
+
+        // 6) 删缓存（最小集）
         stringRedisTemplate.delete(detailKey(articleId));
 
         stringRedisTemplate.delete("article:hot:list:top10");

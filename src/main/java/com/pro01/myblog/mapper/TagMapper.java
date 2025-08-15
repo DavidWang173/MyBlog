@@ -71,4 +71,7 @@ public interface TagMapper {
         WHERE is_system = TRUE
         """)
     long countAllSystem();
+
+    // 编辑文章的标签
+    List<Long> findSystemTagIdsByNames(List<String> list);
 }

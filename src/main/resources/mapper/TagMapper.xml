@@ -15,4 +15,16 @@
         </foreach>
     </select>
 
+    <!-- 批量根据标签名查询系统标签ID -->
+    <select id="findSystemTagIdsByNames" parameterType="list" resultType="long">
+        SELECT id
+        FROM tags
+        WHERE is_system = TRUE
+        <if test="list != null and list.size > 0">
+            AND name IN
+            <foreach collection="list" item="name" open="(" separator="," close=")">
+                #{name}
+            </foreach>
+        </if>
+    </select>
 </mapper>
