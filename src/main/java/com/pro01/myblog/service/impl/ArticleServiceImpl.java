@@ -374,6 +374,10 @@ public class ArticleServiceImpl implements ArticleService {
         dto.setCommentCount(article.getCommentCount() != null ? article.getCommentCount() : 0L);
         dto.setCreateTime(article.getCreateTime());
 
+        // ⭐ 新增：查标签名列表
+        List<String> tagNames = tagMapper.findNamesByArticleId(articleId);
+        dto.setTags(tagNames); // 允许为空列表
+
         // 4) 写缓存：用“无 isLiked 的副本”
         cacheDetailWithoutIsLiked(detailKey, dto);
 
@@ -421,6 +425,7 @@ public class ArticleServiceImpl implements ArticleService {
         copy.setLikeCount(src.getLikeCount());
         copy.setCommentCount(src.getCommentCount());
         copy.setCreateTime(src.getCreateTime());
+        copy.setTags(src.getTags()); // ⭐ 新增：把标签也写入缓存
         // 不复制 isLiked
 
         redisTemplate.opsForValue().set(key, copy, 30, TimeUnit.MINUTES);

@@ -27,4 +27,13 @@
             </foreach>
         </if>
     </select>
+
+    <select id="findNamesByArticleId" parameterType="long" resultType="string">
+        SELECT t.name
+        FROM article_tags at
+                 JOIN tags t ON t.id = at.tag_id
+        WHERE at.article_id = #{articleId}
+        ORDER BY t.name
+    </select>
+
 </mapper>

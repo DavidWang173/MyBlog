@@ -74,4 +74,7 @@ public interface TagMapper {
 
     // 编辑文章的标签
     List<Long> findSystemTagIdsByNames(List<String> list);
+
+    // 查看文章列表时用
+    List<String> findNamesByArticleId(@Param("articleId") Long articleId); // 新增
 }
