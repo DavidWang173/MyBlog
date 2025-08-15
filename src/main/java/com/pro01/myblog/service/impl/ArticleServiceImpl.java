@@ -2,9 +2,7 @@ package com.pro01.myblog.service.impl;
 
 import com.pro01.myblog.config.CoverProperties;
 import com.pro01.myblog.dto.*;
-import com.pro01.myblog.mapper.ArticleLikeMapper;
-import com.pro01.myblog.mapper.ArticleMapper;
-import com.pro01.myblog.mapper.UserMapper;
+import com.pro01.myblog.mapper.*;
 import com.pro01.myblog.pojo.Article;
 import com.pro01.myblog.pojo.PageResult;
 import com.pro01.myblog.pojo.User;
@@ -44,6 +42,12 @@ public class ArticleServiceImpl implements ArticleService {
     @Autowired
     private ArticleLikeMapper articleLikeMapper;
 
+    @Autowired
+    private TagMapper tagMapper;
+
+    @Autowired
+    private ArticleTagMapper articleTagMapper;
+
     private static final Set<String> VALID_CATEGORIES = Set.of("TECH", "LIFE", "MUSIC", "MOVIE", "NOTE", "FRIENDS");
 
     private String detailKey(Long id) { return "article:detail:" + id; }
@@ -72,29 +76,83 @@ public class ArticleServiceImpl implements ArticleService {
     }
 
     // 发布文章
+//    @Override
+//    public void publishArticle(Long userId, ArticlePublishDTO dto) {
+//        String summary = dto.getSummary();
+//        if (summary == null || summary.trim().isEmpty()) {
+//            summary = dto.getContent().length() > 30
+//                    ? dto.getContent().substring(0, 30)
+//                    : dto.getContent();
+//        }
+//
+//        Article article = new Article();
+//        article.setUserId(userId);
+//        article.setTitle(dto.getTitle());
+//        article.setContent(dto.getContent());
+//        article.setSummary(summary);
+//        article.setCategory(dto.getCategory());
+//        article.setCoverUrl(dto.getCoverUrl()); // 可为 null
+//        article.setStatus("PUBLISHED");
+//        article.setCreateTime(LocalDateTime.now());
+//        article.setUpdateTime(LocalDateTime.now());
+//
+//        articleMapper.insertArticle(article);
+//
+//        // TODO: 之后这里可以调用 elasticService.indexArticle(article);
+//    }
     @Override
+    @Transactional
     public void publishArticle(Long userId, ArticlePublishDTO dto) {
+        // 1) 摘要兜底
         String summary = dto.getSummary();
         if (summary == null || summary.trim().isEmpty()) {
-            summary = dto.getContent().length() > 30
-                    ? dto.getContent().substring(0, 30)
-                    : dto.getContent();
+            String content = dto.getContent() == null ? "" : dto.getContent();
+            summary = content.length() > 30 ? content.substring(0, 30) : content;
         }
 
+        // 2) 校验/归一化
+        String category = dto.getCategory();
+        if (category == null || !(category.equals("TECH") || category.equals("LIFE") || category.equals("NOTE"))) {
+            throw new IllegalArgumentException("非法的category");
+        }
+
+        // 3) 插入文章
         Article article = new Article();
         article.setUserId(userId);
         article.setTitle(dto.getTitle());
         article.setContent(dto.getContent());
         article.setSummary(summary);
-        article.setCategory(dto.getCategory());
-        article.setCoverUrl(dto.getCoverUrl()); // 可为 null
+        article.setCategory(category);
+        article.setCoverUrl(dto.getCoverUrl());
         article.setStatus("PUBLISHED");
         article.setCreateTime(LocalDateTime.now());
         article.setUpdateTime(LocalDateTime.now());
+        articleMapper.insertArticle(article); // 回填 article.id
 
-        articleMapper.insertArticle(article);
+        // 4) 处理标签（可空）
+        List<String> tagNames = dto.getTags();
+        if (tagNames == null || tagNames.isEmpty()) return;
 
-        // TODO: 之后这里可以调用 elasticService.indexArticle(article);
+        // 去重、去空白
+        tagNames = tagNames.stream()
+                .filter(Objects::nonNull)
+                .map(String::trim)
+                .filter(s -> !s.isEmpty())
+                .distinct()
+                .limit(5) // 最多5个
+                .toList();
+
+        if (tagNames.isEmpty()) return;
+
+        // 只允许系统内置标签；查出其ID
+        List<Long> tagIds = tagMapper.findTagIdsByNames(tagNames);
+        if (tagIds.isEmpty()) {
+            // 全都不是系统标签，直接返回（或抛错，看你需求）
+            return;
+        }
+
+        // 批量绑定（整新增，发布场景无“先删后插”）
+        articleTagMapper.insertBatch(article.getId(), tagIds);
     }
 
     // 修改文章

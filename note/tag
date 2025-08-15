@@ -5,6 +5,8 @@
     "MySQL",
     "Redis",
     "Elasticsearch",
+    "Vue",
+    "React",
     "Go",
     "Python",
     "C++",
@@ -51,7 +53,6 @@
   "NOTE": [
     "学习笔记",
     "读书笔记",
-    "踩坑记录",
     "复盘",
     "随笔",
     "面经",

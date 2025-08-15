@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.pro01.myblog.mapper.TagMapper">
+
+    <!-- 只取系统内置标签，防止脏数据 -->
+    <select id="findTagIdsByNames" parameterType="list" resultType="long">
+        SELECT id
+        FROM tags
+        WHERE is_system = TRUE
+        AND name IN
+        <foreach collection="names" item="n" open="(" separator="," close=")">
+            #{n}
+        </foreach>
+    </select>
+
+</mapper>
