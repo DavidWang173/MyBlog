@@ -58,3 +58,10 @@ avatar:
 cover:
   upload-path: uploads/cover/
   access-url-prefix: http://localhost:8080/uploads/cover/
+
+qwen:
+  apiKey: ${DASHSCOPE_API_KEY:}
+  baseUrl: https://dashscope.aliyuncs.com/compatible-mode/v1
+  model: qwen-plus
+  timeoutMs: 120000
+  maxTokens: 2000

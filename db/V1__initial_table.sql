@@ -83,6 +83,14 @@ CREATE TABLE article_favorites (
                                    PRIMARY KEY (user_id, article_id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
+-- AI摘要表
+CREATE TABLE ai_article_summaries (
+                                      article_id BIGINT PRIMARY KEY,
+                                      ai_summary TEXT NOT NULL,
+                                      model VARCHAR(64) NOT NULL,
+                                      update_time DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
 -- 评论表
 CREATE TABLE comments (
                           id           BIGINT PRIMARY KEY AUTO_INCREMENT,
