@@ -48,6 +48,9 @@ public class ArticleServiceImpl implements ArticleService {
     @Autowired
     private ArticleTagMapper articleTagMapper;
 
+    @Autowired
+    private ArticleFavoriteMapper articleFavoriteMapper;
+
     private static final Set<String> VALID_CATEGORIES = Set.of("TECH", "LIFE", "MUSIC", "MOVIE", "NOTE", "FRIENDS");
 
     private String detailKey(Long id) { return "article:detail:" + id; }
@@ -264,22 +267,28 @@ public class ArticleServiceImpl implements ArticleService {
 
     // 查看文章详情
 //    @Override
-//    public ArticleDetailDTO getArticleDetail(Long articleId) {
+//    public ArticleDetailDTO getArticleDetail(Long articleId, Long currentUserId) {
 //        final String detailKey = "article:detail:" + articleId;
 //        final String viewKey   = "article:view:" + articleId;
 //        final String dirtySet  = "article:view:dirty";
 //
+//        System.out.println("article_detail_currentUserId = {" + currentUserId + "}");
+//
 //        // 1) 查缓存
 //        Object cached = redisTemplate.opsForValue().get(detailKey);
 //        if (cached instanceof ArticleDetailDTO dto) {
-//            // 只在缓存命中时初始化一次 viewCount（使用 0 作为默认）
+//            // 浏览量初始化（缺则补）
 //            initViewCountIfAbsent(articleId, viewKey, 0L);
 //
 //            // 浏览量 +1
 //            Long total = stringRedisTemplate.opsForValue().increment(viewKey);
 //            if (total != null) dto.setViewCount(total);
-//            // 加入脏集合
+//
+//            // 标记脏集合
 //            stringRedisTemplate.opsForSet().add(dirtySet, articleId.toString());
+//
+//            // —— 返回前补 isLiked（不写回缓存）——
+//            dto.setIsLiked(resolveIsLiked(currentUserId, articleId));
 //            return dto;
 //        }
 //
@@ -290,7 +299,7 @@ public class ArticleServiceImpl implements ArticleService {
 //        User author = userMapper.findSimpleUserById(article.getUserId());
 //        if (author == null) throw new IllegalArgumentException("作者不存在");
 //
-//        // 3) 组装 DTO（不含 viewCount）
+//        // 3) 组装 DTO（含公共字段；isLiked 稍后补）
 //        ArticleDetailDTO dto = new ArticleDetailDTO();
 //        dto.setId(article.getId());
 //        dto.setTitle(article.getTitle());
@@ -304,8 +313,12 @@ public class ArticleServiceImpl implements ArticleService {
 //        dto.setCommentCount(article.getCommentCount() != null ? article.getCommentCount() : 0L);
 //        dto.setCreateTime(article.getCreateTime());
 //
-//        // 4) 缓存详情（30分钟）
-//        redisTemplate.opsForValue().set(detailKey, dto, 30, TimeUnit.MINUTES);
+//        // ⭐ 新增：查标签名列表
+//        List<String> tagNames = tagMapper.findNamesByArticleId(articleId);
+//        dto.setTags(tagNames); // 允许为空列表
+//
+//        // 4) 写缓存：用“无 isLiked 的副本”
+//        cacheDetailWithoutIsLiked(detailKey, dto);
 //
 //        // 5) 初始化 viewCount（用 DB 值，避免重复查）
 //        long baseView = (article.getViewCount() != null) ? article.getViewCount() : 0L;
@@ -315,25 +328,52 @@ public class ArticleServiceImpl implements ArticleService {
 //        Long total = stringRedisTemplate.opsForValue().increment(viewKey);
 //        dto.setViewCount(total != null ? total : baseView + 1);
 //
-//        // 7) 加入脏集合
+//        // 7) 标记脏集合
 //        stringRedisTemplate.opsForSet().add(dirtySet, articleId.toString());
+//
+//        // 8) 返回前补 isLiked（不入缓存）
+//        dto.setIsLiked(resolveIsLiked(currentUserId, articleId));
 //
 //        return dto;
 //    }
 //
-//    /**
-//     * 原子初始化 viewCount（SETNX 语义）
-//     */
+//    /** 原子初始化 viewCount（SETNX 语义） */
 //    private void initViewCountIfAbsent(Long articleId, String viewKey, long baseView) {
 //        stringRedisTemplate.opsForValue().setIfAbsent(viewKey, String.valueOf(baseView));
+//    }
+//
+//    /** 实时计算 isLiked：未登录恒 false；已登录查关系表 */
+//    private boolean resolveIsLiked(Long currentUserId, Long articleId) {
+//        if (currentUserId == null) return false;
+//        Boolean liked = articleLikeMapper.existsLike(currentUserId, articleId);
+//        return Boolean.TRUE.equals(liked);
+//    }
+//
+//    /** 写缓存时复制一份“无 isLiked”的 DTO */
+//    private void cacheDetailWithoutIsLiked(String key, ArticleDetailDTO src) {
+//        ArticleDetailDTO copy = new ArticleDetailDTO();
+//        copy.setId(src.getId());
+//        copy.setTitle(src.getTitle());
+//        copy.setContent(src.getContent());
+//        copy.setSummary(src.getSummary());
+//        copy.setCategory(src.getCategory());
+//        copy.setCoverUrl(src.getCoverUrl());
+//        copy.setNickname(src.getNickname());
+//        copy.setAvatar(src.getAvatar());
+//        copy.setViewCount(src.getViewCount());
+//        copy.setLikeCount(src.getLikeCount());
+//        copy.setCommentCount(src.getCommentCount());
+//        copy.setCreateTime(src.getCreateTime());
+//        copy.setTags(src.getTags()); // ⭐ 新增：把标签也写入缓存
+//        // 不复制 isLiked
+//
+//        redisTemplate.opsForValue().set(key, copy, 30, TimeUnit.MINUTES);
 //    }
     @Override
     public ArticleDetailDTO getArticleDetail(Long articleId, Long currentUserId) {
         final String detailKey = "article:detail:" + articleId;
         final String viewKey   = "article:view:" + articleId;
         final String dirtySet  = "article:view:dirty";
-
-        System.out.println("article_detail_currentUserId = {" + currentUserId + "}");
 
         // 1) 查缓存
         Object cached = redisTemplate.opsForValue().get(detailKey);
@@ -348,8 +388,9 @@ public class ArticleServiceImpl implements ArticleService {
             // 标记脏集合
             stringRedisTemplate.opsForSet().add(dirtySet, articleId.toString());
 
-            // —— 返回前补 isLiked（不写回缓存）——
+            // —— 返回前补用户态（不写回缓存）——
             dto.setIsLiked(resolveIsLiked(currentUserId, articleId));
+            dto.setIsFavorite(resolveIsFavorite(currentUserId, articleId));
             return dto;
         }
 
@@ -360,7 +401,7 @@ public class ArticleServiceImpl implements ArticleService {
         User author = userMapper.findSimpleUserById(article.getUserId());
         if (author == null) throw new IllegalArgumentException("作者不存在");
 
-        // 3) 组装 DTO（含公共字段；isLiked 稍后补）
+        // 3) 组装 DTO（公共字段）
         ArticleDetailDTO dto = new ArticleDetailDTO();
         dto.setId(article.getId());
         dto.setTitle(article.getTitle());
@@ -374,14 +415,14 @@ public class ArticleServiceImpl implements ArticleService {
         dto.setCommentCount(article.getCommentCount() != null ? article.getCommentCount() : 0L);
         dto.setCreateTime(article.getCreateTime());
 
-        // ⭐ 新增：查标签名列表
+        // 标签
         List<String> tagNames = tagMapper.findNamesByArticleId(articleId);
-        dto.setTags(tagNames); // 允许为空列表
+        dto.setTags(tagNames);
 
-        // 4) 写缓存：用“无 isLiked 的副本”
-        cacheDetailWithoutIsLiked(detailKey, dto);
+        // 4) 写缓存（排除 isLiked / isFavorite）
+        cacheDetailWithoutUserFlags(detailKey, dto);
 
-        // 5) 初始化 viewCount（用 DB 值，避免重复查）
+        // 5) 初始化 viewCount（用 DB 值）
         long baseView = (article.getViewCount() != null) ? article.getViewCount() : 0L;
         initViewCountIfAbsent(articleId, viewKey, baseView);
 
@@ -389,11 +430,12 @@ public class ArticleServiceImpl implements ArticleService {
         Long total = stringRedisTemplate.opsForValue().increment(viewKey);
         dto.setViewCount(total != null ? total : baseView + 1);
 
-        // 7) 标记脏集合
+        // 7) 脏集合
         stringRedisTemplate.opsForSet().add(dirtySet, articleId.toString());
 
-        // 8) 返回前补 isLiked（不入缓存）
+        // 8) 返回前补用户态（不入缓存）
         dto.setIsLiked(resolveIsLiked(currentUserId, articleId));
+        dto.setIsFavorite(resolveIsFavorite(currentUserId, articleId));
 
         return dto;
     }
@@ -410,8 +452,15 @@ public class ArticleServiceImpl implements ArticleService {
         return Boolean.TRUE.equals(liked);
     }
 
-    /** 写缓存时复制一份“无 isLiked”的 DTO */
-    private void cacheDetailWithoutIsLiked(String key, ArticleDetailDTO src) {
+    /** 实时计算 isFavorite：未登录恒 false；已登录查关系表（is_deleted=FALSE） */
+    private boolean resolveIsFavorite(Long currentUserId, Long articleId) {
+        if (currentUserId == null) return false;
+        Boolean fav = articleFavoriteMapper.existsFavorite(currentUserId, articleId);
+        return Boolean.TRUE.equals(fav);
+    }
+
+    /** 写缓存：复制一份“无用户态字段”的 DTO */
+    private void cacheDetailWithoutUserFlags(String key, ArticleDetailDTO src) {
         ArticleDetailDTO copy = new ArticleDetailDTO();
         copy.setId(src.getId());
         copy.setTitle(src.getTitle());
@@ -425,11 +474,12 @@ public class ArticleServiceImpl implements ArticleService {
         copy.setLikeCount(src.getLikeCount());
         copy.setCommentCount(src.getCommentCount());
         copy.setCreateTime(src.getCreateTime());
-        copy.setTags(src.getTags()); // ⭐ 新增：把标签也写入缓存
-        // 不复制 isLiked
+        copy.setTags(src.getTags());
+        // 不复制 isLiked / isFavorite
 
         redisTemplate.opsForValue().set(key, copy, 30, TimeUnit.MINUTES);
     }
+
 
     // 查看文章列表
     @Override

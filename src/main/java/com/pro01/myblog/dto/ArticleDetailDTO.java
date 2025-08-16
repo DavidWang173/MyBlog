@@ -25,4 +25,5 @@ public class ArticleDetailDTO {
 
     // 不进缓存，但会出现在 HTTP 响应里
     private Boolean isLiked;
+    private Boolean isFavorite;
 }

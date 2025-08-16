@@ -65,4 +65,14 @@ public interface ArticleFavoriteMapper {
         """)
     long countUserFavorites(@Param("userId") Long userId);
 
+    // 是否已收藏（查看文章详情时用）
+    @Select("""
+        SELECT EXISTS(
+            SELECT 1 FROM article_favorites
+            WHERE user_id = #{userId}
+              AND article_id = #{articleId}
+              AND is_deleted = FALSE
+        )
+    """)
+    Boolean existsFavorite(@Param("userId") Long userId, @Param("articleId") Long articleId);
 }
