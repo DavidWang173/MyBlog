@@ -14,5 +14,7 @@ import java.time.LocalDateTime;
 public class ArticleFavorite {
     private Long userId;
     private Long articleId;
+    private boolean isDeleted;
     private LocalDateTime createTime;
+    private LocalDateTime updateTime;
 }

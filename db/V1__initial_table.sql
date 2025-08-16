@@ -36,10 +36,15 @@ CREATE TABLE article_drafts (
                                 user_id BIGINT NOT NULL,
                                 title VARCHAR(255),
                                 content TEXT,
+                                summary TEXT,
+                                category ENUM('TECH','LIFE','NOTE'),
                                 cover_url VARCHAR(255),
-                                is_auto_saved BOOLEAN DEFAULT FALSE,
+                                tags_json JSON,                 -- ["Java","Redis"]
+                                is_auto_saved BOOLEAN DEFAULT FALSE, -- 最近一次保存方式，仅做标记
                                 create_time DATETIME DEFAULT CURRENT_TIMESTAMP,
-                                last_edit_time DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+                                last_edit_time DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+                                UNIQUE KEY uk_user (user_id),
+                                INDEX idx_user_edit (user_id, last_edit_time DESC)
 );
 
 -- 标签表
@@ -72,9 +77,11 @@ CREATE TABLE article_likes (
 CREATE TABLE article_favorites (
                                    user_id BIGINT NOT NULL,
                                    article_id BIGINT NOT NULL,
+                                   is_deleted BOOLEAN DEFAULT FALSE,
                                    create_time DATETIME DEFAULT CURRENT_TIMESTAMP,
+                                   update_time DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
                                    PRIMARY KEY (user_id, article_id)
-);
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 -- 评论表
 CREATE TABLE comments (
