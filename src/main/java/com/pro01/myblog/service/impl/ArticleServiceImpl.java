@@ -53,7 +53,27 @@ public class ArticleServiceImpl implements ArticleService {
 
     private static final Set<String> VALID_CATEGORIES = Set.of("TECH", "LIFE", "MUSIC", "MOVIE", "NOTE", "FRIENDS");
 
-    private String detailKey(Long id) { return "article:detail:" + id; }
+    private String detailKey(Long articleId) {
+        return "article:detail:" + articleId;
+    }
+    // AI 摘要缓存键
+    private String aiSummaryKey(Long articleId) {
+        return "ai:summary:" + articleId;
+    }
+
+    // 限流键（与之前 AI 服务里的命名保持一致）
+    private String aiRlUserKey(Long userId, Long articleId) {
+        return "rl:ai:sum:user:" + userId + ":" + articleId;
+    }
+
+    private String aiRlArticleKey(Long articleId) {
+        return "rl:ai:sum:article:" + articleId;
+    }
+
+    // 生成锁键
+    private String aiGenLockKey(Long articleId) {
+        return "lock:ai:sum:" + articleId;
+    }
 
     private static final String HOT_ZSET_KEY  = "article:hot";
     private static final String HOT_LIST_KEY  = "article:hot:list:top10"; // 最终列表缓存
@@ -206,6 +226,11 @@ public class ArticleServiceImpl implements ArticleService {
             }
         }
 
+        // ==== 这里先记录是否修改了标题/正文，用于精确删缓存 ====
+        boolean titleChanged = !Objects.equals(origin.getTitle(), title);
+        boolean contentChanged = !Objects.equals(origin.getContent(), content);
+        boolean needInvalidateAiSummary = titleChanged || contentChanged;
+
         // 4) 执行更新
         int updated = articleMapper.updateArticleById(articleId, title, content, summary, category, coverUrl);
         if (updated <= 0) {
@@ -252,6 +277,22 @@ public class ArticleServiceImpl implements ArticleService {
         // 如有其他相关缓存（比如列表、分类页、热门榜），这里可以视情况追加删除：
         // stringRedisTemplate.delete("article:list:latest"); // 示例
         // stringRedisTemplate.opsForZSet().remove("article:hot:zset", articleId.toString());
+        // —— AI 摘要相关：仅标题/正文变化时才删 ——
+        if (needInvalidateAiSummary) {
+            // 1) AI 摘要缓存本体
+            stringRedisTemplate.delete(aiSummaryKey(articleId));
+            // 2) 速率限制与并发生成用到的键，避免影响下一次生成
+            stringRedisTemplate.delete(aiRlArticleKey(articleId));
+            // 用户维度的限流键是按 userId 生成的，理论上不需要全量删除；
+            // 但为了保险，可以仅删除当前用户这一个：
+            stringRedisTemplate.delete(aiRlUserKey(userId, articleId));
+            // 3) 生成锁（如果正好有人在生成，锁会自动过期；这里主动清一次也可以）
+            stringRedisTemplate.delete(aiGenLockKey(articleId));
+
+            // （可选）如果你希望“内容一改，旧摘要就无效”，还可以删 DB 的摘要行，强制下次重新生成：
+            // aiArticleSummaryMapper.deleteByArticleId(articleId);
+            // 上面这行需要你在 Mapper 里补一个 delete 方法；不想删表的话，保留即可。
+        }
     }
 
     // —— 小工具 —— //

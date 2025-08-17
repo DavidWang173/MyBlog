@@ -64,4 +64,4 @@ qwen:
   baseUrl: https://dashscope.aliyuncs.com/compatible-mode/v1
   model: qwen-plus
   timeoutMs: 120000
-  maxTokens: 2000
+  maxTokens: 512
