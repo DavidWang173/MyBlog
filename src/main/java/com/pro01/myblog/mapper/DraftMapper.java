@@ -36,4 +36,8 @@ public interface DraftMapper {
                                                @Param("like") String like,
                                                @Param("limit") int limit,
                                                @Param("offset") int offset);
+
+    // 查看草稿详情
+    ArticleDraft selectByIdAndUser(@Param("id") Long id,
+                                   @Param("userId") Long userId);
 }

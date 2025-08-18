@@ -15,4 +15,7 @@ public interface DraftService {
 
     // 模糊查询草稿（分页）
     PageResult<DraftDTO> searchMyDrafts(Long userId, String keyword, Integer page, Integer pageSize);
+
+    // 查看草稿详情
+    DraftDTO getMyDraftById(Long userId, Long draftId);
 }

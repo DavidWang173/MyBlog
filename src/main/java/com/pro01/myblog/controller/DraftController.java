@@ -50,4 +50,13 @@ public class DraftController {
         Long userId = RequestUtil.getUserId(request);
         return Result.success(draftService.searchMyDrafts(userId, keyword, page, pageSize));
     }
+
+    // 查看草稿详情
+    @LoginRequired
+    @GetMapping("/drafts/{draftId}")
+    public Result<DraftDTO> getDraft(@PathVariable Long draftId, HttpServletRequest request) {
+        Long userId = RequestUtil.getUserId(request);
+        DraftDTO dto = draftService.getMyDraftById(userId, draftId);
+        return Result.success(dto);
+    }
 }

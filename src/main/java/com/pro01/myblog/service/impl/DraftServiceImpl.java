@@ -180,4 +180,26 @@ public class DraftServiceImpl implements DraftService {
         return PageResult.of(total, dtos, current, pageSize);
     }
 
+    // 查看草稿详情
+    @Override
+    public DraftDTO getMyDraftById(Long userId, Long draftId) {
+        if (userId == null) throw new IllegalArgumentException("未登录");
+        ArticleDraft d = draftMapper.selectByIdAndUser(draftId, userId);
+        if (d == null) throw new IllegalArgumentException("草稿不存在或已被删除");
+
+        DraftDTO dto = new DraftDTO();
+        dto.setId(d.getId());
+        dto.setUserId(d.getUserId());
+        dto.setTitle(d.getTitle());
+        dto.setContent(d.getContent());
+        dto.setSummary(d.getSummary());
+        dto.setCategory(d.getCategory());
+        dto.setCoverUrl(d.getCoverUrl());
+        dto.setPromptDismissed(Boolean.TRUE.equals(d.getPromptDismissed()));
+        dto.setIsDeleted(Boolean.TRUE.equals(d.getIsDeleted()));
+        dto.setCreateTime(d.getCreateTime());
+        dto.setLastEditTime(d.getLastEditTime());
+        dto.setTags(parseTags(d.getTagsJson()));
+        return dto;
+    }
 }

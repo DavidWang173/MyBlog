@@ -97,5 +97,26 @@
         LIMIT #{limit} OFFSET #{offset}
     </select>
 
+    <!-- 其他语句省略，这里新增按 id+user 查询（未删除） -->
+    <select id="selectByIdAndUser" resultType="com.pro01.myblog.pojo.ArticleDraft">
+        SELECT
+            id,
+            user_id         AS userId,
+            title,
+            content,
+            summary,
+            category,
+            cover_url       AS coverUrl,
+            CAST(tags_json AS CHAR) AS tagsJson,
+            prompt_dismissed AS promptDismissed,
+            is_deleted      AS isDeleted,
+            create_time     AS createTime,
+            last_edit_time  AS lastEditTime
+        FROM article_drafts
+        WHERE id = #{id}
+          AND user_id = #{userId}
+          AND is_deleted = FALSE
+        LIMIT 1
+    </select>
 
 </mapper>
