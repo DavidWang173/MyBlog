@@ -19,6 +19,7 @@ public class ArticleDraft {
     private String summary;
     private String category;
     private String coverUrl;
+    private String tagsJson;
     private Boolean promptDismissed;
     private Boolean isDeleted;
     private LocalDateTime createTime;

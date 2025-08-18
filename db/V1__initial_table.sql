@@ -39,6 +39,7 @@ CREATE TABLE article_drafts (
                                 summary TEXT NULL,
                                 category ENUM('TECH','LIFE','NOTE') NULL,
                                 cover_url VARCHAR(255) NULL,
+                                tags_json JSON NULL,
 
     -- 弹窗相关
                                 prompt_dismissed BOOLEAN DEFAULT FALSE,   -- 用户拒绝“调出”后置 true
