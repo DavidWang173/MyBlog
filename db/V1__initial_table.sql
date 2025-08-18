@@ -46,7 +46,8 @@ CREATE TABLE article_drafts (
                                 create_time DATETIME DEFAULT CURRENT_TIMESTAMP,
                                 last_edit_time DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
 
-                                INDEX idx_user_latest (user_id, is_deleted, last_edit_time DESC)
+                                INDEX idx_user_latest (user_id, is_deleted, last_edit_time),
+                                INDEX idx_user_not_deleted (user_id, is_deleted)
 );
 
 -- 标签表
