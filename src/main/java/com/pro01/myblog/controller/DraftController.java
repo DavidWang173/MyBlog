@@ -39,4 +39,15 @@ public class DraftController {
         PageResult<DraftDTO> pr = draftService.listMyDrafts(userId, page, pageSize);
         return Result.success(pr);
     }
+
+    // 模糊查询草稿（分页）
+    @LoginRequired
+    @GetMapping("/drafts/me/search")
+    public Result<PageResult<DraftDTO>> searchMyDrafts(@RequestParam String keyword,
+                                                       @RequestParam(defaultValue = "1") Integer page,
+                                                       @RequestParam(defaultValue = "20") Integer pageSize,
+                                                       HttpServletRequest request) {
+        Long userId = RequestUtil.getUserId(request);
+        return Result.success(draftService.searchMyDrafts(userId, keyword, page, pageSize));
+    }
 }

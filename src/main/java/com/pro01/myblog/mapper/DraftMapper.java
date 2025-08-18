@@ -27,4 +27,13 @@ public interface DraftMapper {
     List<ArticleDraft> selectPageByUser(@Param("userId") Long userId,
                                         @Param("limit") int limit,
                                         @Param("offset") int offset);
+
+    // 模糊查询草稿（分页）
+    long countByUserAndLike(@Param("userId") Long userId,
+                            @Param("like") String like);
+
+    List<ArticleDraft> selectPageByUserAndLike(@Param("userId") Long userId,
+                                               @Param("like") String like,
+                                               @Param("limit") int limit,
+                                               @Param("offset") int offset);
 }

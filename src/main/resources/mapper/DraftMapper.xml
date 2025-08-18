@@ -59,4 +59,43 @@
         LIMIT #{limit} OFFSET #{offset}
     </select>
 
+    <!-- 统计：当前用户 + 未删除 + title/content 模糊 -->
+    <select id="countByUserAndLike" resultType="long">
+        SELECT COUNT(*)
+        FROM article_drafts
+        WHERE user_id = #{userId}
+          AND is_deleted = FALSE
+          AND (
+            title   LIKE #{like} ESCAPE '\\'
+                OR content LIKE #{like} ESCAPE '\\'
+            )
+    </select>
+
+    <!-- 分页：当前用户 + 未删除 + 模糊匹配，按最近编辑倒序 -->
+    <select id="selectPageByUserAndLike" resultType="com.pro01.myblog.pojo.ArticleDraft">
+        SELECT
+            id,
+            user_id       AS userId,
+            title,
+            content,
+            summary,
+            category,
+            cover_url     AS coverUrl,
+            CAST(tags_json AS CHAR) AS tagsJson,
+            prompt_dismissed AS promptDismissed,
+            is_deleted    AS isDeleted,
+            create_time   AS createTime,
+            last_edit_time AS lastEditTime
+        FROM article_drafts
+        WHERE user_id = #{userId}
+          AND is_deleted = FALSE
+          AND (
+            title   LIKE #{like} ESCAPE '\\'
+                OR content LIKE #{like} ESCAPE '\\'
+            )
+        ORDER BY last_edit_time DESC
+        LIMIT #{limit} OFFSET #{offset}
+    </select>
+
+
 </mapper>

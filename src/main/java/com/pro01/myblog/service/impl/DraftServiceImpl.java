@@ -148,4 +148,36 @@ public class DraftServiceImpl implements DraftService {
             return Collections.emptyList();
         }
     }
+
+    // 模糊查询草稿（分页）
+    @Override
+    public PageResult<DraftDTO> searchMyDrafts(Long userId, String q, Integer page, Integer size) {
+        if (userId == null) throw new IllegalArgumentException("未登录");
+
+        String key = (q == null) ? "" : q.trim();
+        if (key.isEmpty()) {
+            // 关键字为空时，返回空结果（避免和“列表接口”语义冲突）
+            int current = (page == null || page < 1) ? 1 : page;
+            int pageSize = (size == null) ? 20 : Math.max(1, Math.min(size, 50));
+            return PageResult.of(0, List.of(), current, pageSize);
+        }
+
+        // 转义 % 和 _，并使用 ESCAPE '\\'
+        String escaped = key.replace("\\", "\\\\").replace("%", "\\%").replace("_", "\\_");
+        String like = "%" + escaped + "%";
+
+        int current = (page == null || page < 1) ? 1 : page;
+        int pageSize = (size == null) ? 20 : Math.max(1, Math.min(size, 50));
+        int offset = (current - 1) * pageSize;
+
+        long total = draftMapper.countByUserAndLike(userId, like);
+        if (total == 0) {
+            return PageResult.of(0, List.of(), current, pageSize);
+        }
+
+        List<ArticleDraft> rows = draftMapper.selectPageByUserAndLike(userId, like, pageSize, offset);
+        List<DraftDTO> dtos = rows.stream().map(this::toDTO).collect(Collectors.toList());
+        return PageResult.of(total, dtos, current, pageSize);
+    }
+
 }
