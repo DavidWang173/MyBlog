@@ -21,4 +21,10 @@ public interface DraftService {
 
     // 最新草稿弹窗
     DraftDTO findLatestCandidate(Long userId);
+
+    // 拒绝调出草稿
+    void dismissDraft(Long userId, Long draftId);
+
+    // 软删除草稿
+    void softDelete(Long userId, Long draftId);
 }

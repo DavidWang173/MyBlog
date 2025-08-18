@@ -68,4 +68,22 @@ public class DraftController {
         DraftDTO dto = draftService.findLatestCandidate(userId);
         return Result.success(dto); // 没有候选时 dto 为 null
     }
+
+    /** 拒绝“调出草稿”，幂等置 prompt_dismissed = true */
+    @LoginRequired
+    @PostMapping("/drafts/{draftId}/dismiss")
+    public Result<Void> dismiss(@PathVariable Long draftId, HttpServletRequest request) {
+        Long userId = RequestUtil.getUserId(request);
+        draftService.dismissDraft(userId, draftId);
+        return Result.success();
+    }
+
+    // 软删除草稿
+    @LoginRequired
+    @DeleteMapping("/drafts/{draftId}")
+    public Result<Void> deleteDraft(@PathVariable Long draftId, HttpServletRequest request) {
+        Long userId = RequestUtil.getUserId(request);
+        draftService.softDelete(userId, draftId);
+        return Result.success();
+    }
 }

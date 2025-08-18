@@ -142,4 +142,25 @@
         LIMIT 1
     </select>
 
+    <!-- 拒绝“调出草稿”：幂等置 true；不更新 last_edit_time -->
+    <update id="dismissByIdAndUser">
+        UPDATE article_drafts
+        SET
+            prompt_dismissed = TRUE,
+            last_edit_time = last_edit_time
+        WHERE id = #{id}
+          AND user_id = #{userId}
+          AND is_deleted = FALSE
+          AND prompt_dismissed = FALSE
+    </update>
+
+    <update id="softDeleteByIdAndUser">
+        UPDATE article_drafts
+        SET is_deleted = TRUE,
+        last_edit_time = last_edit_time  <!-- 抑制自动更新时间 -->
+        WHERE id = #{id}
+        AND user_id = #{userId}
+        AND is_deleted = FALSE
+    </update>
+
 </mapper>

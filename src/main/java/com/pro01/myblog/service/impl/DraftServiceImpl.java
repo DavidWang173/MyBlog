@@ -225,4 +225,21 @@ public class DraftServiceImpl implements DraftService {
         dto.setTags(parseTags(d.getTagsJson()));
         return dto;
     }
+
+    // 拒绝调出草稿
+    @Override
+    public void dismissDraft(Long userId, Long draftId) {
+        if (userId == null) throw new IllegalArgumentException("未登录");
+        // 幂等更新：只有本人、未删除、且当前为 false 才更新为 true
+        draftMapper.dismissByIdAndUser(draftId, userId);
+        // rows=0 的情况：已删除、非本人、或已是 true —— 都视为幂等成功，不抛错
+    }
+
+    // 软删除草稿
+    @Override
+    public void softDelete(Long userId, Long draftId) {
+        if (userId == null) throw new IllegalArgumentException("未登录");
+        draftMapper.softDeleteByIdAndUser(draftId, userId);
+        // 幂等：影响行数为 0 也不抛错（可能已删/不属于当前用户）
+    }
 }

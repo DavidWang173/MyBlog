@@ -43,4 +43,11 @@ public interface DraftMapper {
 
     // 最新草稿弹窗
     ArticleDraft selectLatestCandidateByUser(@Param("userId") Long userId);
+
+    // 拒绝调出草稿
+    int dismissByIdAndUser(@Param("id") Long id,
+                           @Param("userId") Long userId);
+
+    // 软删除草稿
+    int softDeleteByIdAndUser(@Param("id") Long id, @Param("userId") Long userId);
 }
