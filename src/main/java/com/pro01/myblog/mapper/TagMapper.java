@@ -77,4 +77,7 @@ public interface TagMapper {
 
     // 查看文章列表时用
     List<String> findNamesByArticleId(@Param("articleId") Long articleId); // 新增
+
+    // 返回入参中属于系统标签的那部分“名称列表” (保存草稿时用)
+    List<String> selectValidSystemNames(List<String> names);
 }

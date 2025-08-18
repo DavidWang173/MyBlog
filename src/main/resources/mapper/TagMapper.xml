@@ -36,4 +36,16 @@
         ORDER BY t.name
     </select>
 
+    <!-- 过滤出系统内置标签的“名称列表” -->
+    <!-- 过滤出系统内置标签的“名称列表” -->
+    <select id="selectValidSystemNames" parameterType="list" resultType="string">
+        SELECT name
+        FROM tags
+        WHERE is_system = TRUE
+        AND name IN
+        <foreach collection="list" item="n" open="(" separator="," close=")">
+            #{n}
+        </foreach>
+    </select>
+
 </mapper>

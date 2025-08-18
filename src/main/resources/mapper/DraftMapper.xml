@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.pro01.myblog.mapper.DraftMapper">
+
+    <insert id="insertDraft" parameterType="com.pro01.myblog.pojo.ArticleDraft" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO article_drafts
+        (user_id, title, content, summary, category, cover_url, tags_json,
+         prompt_dismissed, is_deleted, create_time, last_edit_time)
+        VALUES
+            (#{userId}, #{title}, #{content}, #{summary}, #{category}, #{coverUrl}, #{tagsJson},
+             #{promptDismissed}, #{isDeleted}, NOW(), NOW())
+    </insert>
+
+    <update id="updateDraftByIdAndUser">
+        UPDATE article_drafts
+        SET
+            title = #{title},
+            content = #{content},
+            summary = #{summary},
+            category = #{category},
+            cover_url = #{coverUrl},
+            tags_json = #{tagsJson},
+            prompt_dismissed = FALSE,
+            last_edit_time = NOW()
+        WHERE id = #{id}
+          AND user_id = #{userId}
+          AND is_deleted = FALSE
+    </update>
+
+</mapper>
