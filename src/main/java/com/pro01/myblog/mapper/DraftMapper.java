@@ -20,4 +20,11 @@ public interface DraftMapper {
                                @Param("category") String category,
                                @Param("coverUrl") String coverUrl,
                                @Param("tagsJson") String tagsJson);
+
+    // 草稿列表
+    long countByUser(@Param("userId") Long userId);
+
+    List<ArticleDraft> selectPageByUser(@Param("userId") Long userId,
+                                        @Param("limit") int limit,
+                                        @Param("offset") int offset);
 }

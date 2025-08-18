@@ -1,10 +1,13 @@
 package com.pro01.myblog.service.impl;
 
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.pro01.myblog.dto.DraftSaveDTO;
+import com.pro01.myblog.dto.DraftDTO;
 import com.pro01.myblog.mapper.DraftMapper;
 import com.pro01.myblog.mapper.TagMapper;
 import com.pro01.myblog.pojo.ArticleDraft;
+import com.pro01.myblog.pojo.PageResult;
 import com.pro01.myblog.service.DraftService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -24,7 +27,6 @@ public class DraftServiceImpl implements DraftService {
     @Autowired
     private TagMapper tagMapper;
 
-    @Autowired
     private final ObjectMapper objectMapper; // Spring Boot 默认已有（jackson）
 
     // 保存草稿
@@ -94,5 +96,56 @@ public class DraftServiceImpl implements DraftService {
         List<String> systemNames = tagMapper.selectValidSystemNames(cleaned);
         // 这里我选择“宽松”：过滤非法的；如果你要严格，可在数量不等时抛错
         return systemNames;
+    }
+
+    // 草稿列表
+    @Override
+    public PageResult<DraftDTO> listMyDrafts(Long userId, Integer page, Integer size) {
+        if (userId == null) throw new IllegalArgumentException("未登录");
+
+        int current = (page == null || page < 1) ? 1 : page;
+        int pageSize = (size == null) ? 20 : Math.max(1, Math.min(size, 50));
+        int offset = (current - 1) * pageSize;
+
+        long total = draftMapper.countByUser(userId);
+        if (total == 0) {
+            return PageResult.of(0, List.of(), current, pageSize);
+        }
+
+        List<ArticleDraft> rows = draftMapper.selectPageByUser(userId, pageSize, offset);
+        List<DraftDTO> dtos = rows.stream().map(this::toDTO).collect(Collectors.toList());
+
+        return PageResult.of(total, dtos, current, pageSize);
+    }
+
+    private DraftDTO toDTO(ArticleDraft d) {
+        DraftDTO dto = new DraftDTO();
+        if (d == null) return dto;
+
+        dto.setId(d.getId());
+        dto.setUserId(d.getUserId());
+        dto.setTitle(d.getTitle());
+        dto.setContent(d.getContent());
+        dto.setSummary(d.getSummary());
+        dto.setCategory(d.getCategory());
+        dto.setCoverUrl(d.getCoverUrl());
+        dto.setPromptDismissed(Boolean.TRUE.equals(d.getPromptDismissed()));
+        dto.setIsDeleted(Boolean.TRUE.equals(d.getIsDeleted()));
+        dto.setCreateTime(d.getCreateTime());
+        dto.setLastEditTime(d.getLastEditTime());
+
+        // 关键：把 JSON 字符串转为数组
+        dto.setTags(parseTags(d.getTagsJson()));
+        return dto;
+    }
+
+    private List<String> parseTags(String tagsJson) {
+        if (tagsJson == null || tagsJson.isBlank()) return Collections.emptyList();
+        try {
+            return objectMapper.readValue(tagsJson, new TypeReference<List<String>>() {});
+        } catch (Exception e) {
+            // 容错：发生解析异常时返回空数组，避免把转义后的字符串透给前端
+            return Collections.emptyList();
+        }
     }
 }
