@@ -34,17 +34,19 @@ CREATE TABLE articles (
 CREATE TABLE article_drafts (
                                 id BIGINT PRIMARY KEY AUTO_INCREMENT,
                                 user_id BIGINT NOT NULL,
-                                title VARCHAR(255),
-                                content TEXT,
-                                summary TEXT,
-                                category ENUM('TECH','LIFE','NOTE'),
-                                cover_url VARCHAR(255),
-                                tags_json JSON,                 -- ["Java","Redis"]
-                                is_auto_saved BOOLEAN DEFAULT FALSE, -- 最近一次保存方式，仅做标记
+                                title VARCHAR(255) NULL,
+                                content LONGTEXT NULL,
+                                summary TEXT NULL,
+                                category ENUM('TECH','LIFE','NOTE') NULL,
+                                cover_url VARCHAR(255) NULL,
+
+    -- 弹窗相关
+                                prompt_dismissed BOOLEAN DEFAULT FALSE,   -- 用户拒绝“调出”后置 true
+                                is_deleted BOOLEAN DEFAULT FALSE,         -- 发布成功后置 true（软删）
                                 create_time DATETIME DEFAULT CURRENT_TIMESTAMP,
                                 last_edit_time DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-                                UNIQUE KEY uk_user (user_id),
-                                INDEX idx_user_edit (user_id, last_edit_time DESC)
+
+                                INDEX idx_user_latest (user_id, is_deleted, last_edit_time DESC)
 );
 
 -- 标签表
