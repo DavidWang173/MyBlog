@@ -40,4 +40,7 @@ public interface DraftMapper {
     // 查看草稿详情
     ArticleDraft selectByIdAndUser(@Param("id") Long id,
                                    @Param("userId") Long userId);
+
+    // 最新草稿弹窗
+    ArticleDraft selectLatestCandidateByUser(@Param("userId") Long userId);
 }

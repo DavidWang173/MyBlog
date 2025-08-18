@@ -18,4 +18,7 @@ public interface DraftService {
 
     // 查看草稿详情
     DraftDTO getMyDraftById(Long userId, Long draftId);
+
+    // 最新草稿弹窗
+    DraftDTO findLatestCandidate(Long userId);
 }

@@ -59,4 +59,13 @@ public class DraftController {
         DraftDTO dto = draftService.getMyDraftById(userId, draftId);
         return Result.success(dto);
     }
+
+    /** 发布页弹窗候选：只返回最新且未被拒绝的草稿；没有则返回 null */
+    @LoginRequired
+    @GetMapping("/drafts/me/latest-candidate")
+    public Result<DraftDTO> latestCandidate(HttpServletRequest request) {
+        Long userId = RequestUtil.getUserId(request);
+        DraftDTO dto = draftService.findLatestCandidate(userId);
+        return Result.success(dto); // 没有候选时 dto 为 null
+    }
 }

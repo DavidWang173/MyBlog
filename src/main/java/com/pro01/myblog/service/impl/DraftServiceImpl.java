@@ -202,4 +202,27 @@ public class DraftServiceImpl implements DraftService {
         dto.setTags(parseTags(d.getTagsJson()));
         return dto;
     }
+
+    // 最新草稿弹窗
+    @Override
+    public DraftDTO findLatestCandidate(Long userId) {
+        if (userId == null) throw new IllegalArgumentException("未登录");
+        ArticleDraft d = draftMapper.selectLatestCandidateByUser(userId);
+        if (d == null) return null;
+
+        DraftDTO dto = new DraftDTO();
+        dto.setId(d.getId());
+        dto.setUserId(d.getUserId());
+        dto.setTitle(d.getTitle());
+        dto.setContent(d.getContent());
+        dto.setSummary(d.getSummary());
+        dto.setCategory(d.getCategory());
+        dto.setCoverUrl(d.getCoverUrl());
+        dto.setPromptDismissed(Boolean.TRUE.equals(d.getPromptDismissed()));
+        dto.setIsDeleted(Boolean.TRUE.equals(d.getIsDeleted()));
+        dto.setCreateTime(d.getCreateTime());
+        dto.setLastEditTime(d.getLastEditTime());
+        dto.setTags(parseTags(d.getTagsJson()));
+        return dto;
+    }
 }
