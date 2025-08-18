@@ -6,6 +6,7 @@ import java.util.List;
 
 @Data
 public class ArticlePublishDTO {
+    private Long draftId;
     private String title;
     private String content;
     private String summary;   // 可为空
