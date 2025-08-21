@@ -36,15 +36,15 @@ public class CommentController {
     @GetMapping("/comment/list-asc/{articleId}")
     public Result<PageResult<CommentItemDTO>> listAsc(@PathVariable Long articleId,
                                                       @RequestParam(defaultValue = "1") Integer page,
-                                                      @RequestParam(defaultValue = "20") Integer size) {
-        return Result.success(commentService.pageTopLevelAsc(articleId, page, size));
+                                                      @RequestParam(defaultValue = "20") Integer pageSize) {
+        return Result.success(commentService.pageTopLevelAsc(articleId, page, pageSize));
     }
 
     /** 顶层评论：置顶在前 + 按时间倒序（最新→最早） */
     @GetMapping("/comment/list-desc/{articleId}")
     public Result<PageResult<CommentItemDTO>> listDesc(@PathVariable Long articleId,
                                                        @RequestParam(defaultValue = "1") Integer page,
-                                                       @RequestParam(defaultValue = "20") Integer size) {
-        return Result.success(commentService.pageTopLevelDesc(articleId, page, size));
+                                                       @RequestParam(defaultValue = "20") Integer pageSize) {
+        return Result.success(commentService.pageTopLevelDesc(articleId, page, pageSize));
     }
 }
