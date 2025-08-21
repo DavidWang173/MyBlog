@@ -1,6 +1,8 @@
 package com.pro01.myblog.service.impl;
 
 import com.pro01.myblog.dto.CommentCreateDTO;
+import com.pro01.myblog.dto.CommentItemDTO;
+import com.pro01.myblog.pojo.PageResult;
 import com.pro01.myblog.mapper.ArticleMapper4Comment;
 import com.pro01.myblog.mapper.CommentMapper;
 import com.pro01.myblog.pojo.Comment;
@@ -12,6 +14,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 import org.springframework.data.redis.core.StringRedisTemplate;
 
+import java.util.List;
 import java.time.Duration;
 import java.time.LocalDateTime;
 
@@ -87,5 +90,30 @@ public class CommentServiceImpl implements CommentService {
         stringRedisTemplate.delete("article:detail:" + articleId);
 
         return c.getId();
+    }
+
+    // 查看评论列表（正序+倒序）
+    @Override
+    public PageResult<CommentItemDTO> pageTopLevelAsc(Long articleId, Integer page, Integer size) {
+        int current = (page == null || page < 1) ? 1 : page;
+        int pageSize = (size == null) ? 20 : Math.max(1, Math.min(size, 50));
+        int offset = (current - 1) * pageSize;
+
+        long total = commentMapper.countTopLevel(articleId);
+        List<CommentItemDTO> list = total == 0 ? List.of()
+                : commentMapper.selectTopLevelAsc(articleId, pageSize, offset);
+        return PageResult.of(total, list, current, pageSize);
+    }
+
+    @Override
+    public PageResult<CommentItemDTO> pageTopLevelDesc(Long articleId, Integer page, Integer size) {
+        int current = (page == null || page < 1) ? 1 : page;
+        int pageSize = (size == null) ? 20 : Math.max(1, Math.min(size, 50));
+        int offset = (current - 1) * pageSize;
+
+        long total = commentMapper.countTopLevel(articleId);
+        List<CommentItemDTO> list = total == 0 ? List.of()
+                : commentMapper.selectTopLevelDesc(articleId, pageSize, offset);
+        return PageResult.of(total, list, current, pageSize);
     }
 }

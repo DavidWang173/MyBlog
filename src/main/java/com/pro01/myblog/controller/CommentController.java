@@ -2,6 +2,8 @@ package com.pro01.myblog.controller;
 
 import com.pro01.myblog.annotation.LoginRequired;
 import com.pro01.myblog.dto.CommentCreateDTO;
+import com.pro01.myblog.dto.CommentItemDTO;
+import com.pro01.myblog.pojo.PageResult;
 import com.pro01.myblog.service.CommentService;
 import com.pro01.myblog.utils.RequestUtil;
 import com.pro01.myblog.pojo.Result;
@@ -28,5 +30,21 @@ public class CommentController {
         Long userId = RequestUtil.getUserId(request);
         Long commentId = commentService.createComment(userId, articleId, dto);
         return Result.success(commentId);
+    }
+
+    /** 顶层评论：置顶在前 + 按时间正序（最早→最新） */
+    @GetMapping("/comment/list-asc/{articleId}")
+    public Result<PageResult<CommentItemDTO>> listAsc(@PathVariable Long articleId,
+                                                      @RequestParam(defaultValue = "1") Integer page,
+                                                      @RequestParam(defaultValue = "20") Integer size) {
+        return Result.success(commentService.pageTopLevelAsc(articleId, page, size));
+    }
+
+    /** 顶层评论：置顶在前 + 按时间倒序（最新→最早） */
+    @GetMapping("/comment/list-desc/{articleId}")
+    public Result<PageResult<CommentItemDTO>> listDesc(@PathVariable Long articleId,
+                                                       @RequestParam(defaultValue = "1") Integer page,
+                                                       @RequestParam(defaultValue = "20") Integer size) {
+        return Result.success(commentService.pageTopLevelDesc(articleId, page, size));
     }
 }

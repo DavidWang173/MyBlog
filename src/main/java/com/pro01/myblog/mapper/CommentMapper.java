@@ -1,7 +1,10 @@
 package com.pro01.myblog.mapper;
 
+import com.pro01.myblog.dto.CommentItemDTO;
 import com.pro01.myblog.pojo.Comment;
 import org.apache.ibatis.annotations.*;
+
+import java.util.List;
 
 @Mapper
 public interface CommentMapper {
@@ -21,4 +24,58 @@ public interface CommentMapper {
         WHERE id = #{id}
         """)
     Comment findBasicById(@Param("id") Long id);
+
+    // 查看评论列表（正序+倒序）
+    @Select("""
+        SELECT COUNT(*)
+        FROM comments c
+        WHERE c.article_id = #{articleId}
+          AND c.is_deleted = FALSE
+          AND c.parent_id IS NULL
+        """)
+    long countTopLevel(@Param("articleId") Long articleId);
+
+    /** 置顶在前 + 时间正序 */
+    @Select("""
+        SELECT
+          c.id,
+          c.user_id AS userId,
+          u.nickname,
+          u.avatar,
+          c.content,
+          c.is_pinned AS isPinned,
+          c.create_time AS createTime
+        FROM comments c
+        JOIN users u ON u.id = c.user_id
+        WHERE c.article_id = #{articleId}
+          AND c.is_deleted = FALSE
+          AND c.parent_id IS NULL
+        ORDER BY c.is_pinned DESC, c.create_time ASC
+        LIMIT #{limit} OFFSET #{offset}
+        """)
+    List<CommentItemDTO> selectTopLevelAsc(@Param("articleId") Long articleId,
+                                           @Param("limit") int limit,
+                                           @Param("offset") int offset);
+
+    /** 置顶在前 + 时间倒序 */
+    @Select("""
+        SELECT
+          c.id,
+          c.user_id AS userId,
+          u.nickname,
+          u.avatar,
+          c.content,
+          c.is_pinned AS isPinned,
+          c.create_time AS createTime
+        FROM comments c
+        JOIN users u ON u.id = c.user_id
+        WHERE c.article_id = #{articleId}
+          AND c.is_deleted = FALSE
+          AND c.parent_id IS NULL
+        ORDER BY c.is_pinned DESC, c.create_time DESC
+        LIMIT #{limit} OFFSET #{offset}
+        """)
+    List<CommentItemDTO> selectTopLevelDesc(@Param("articleId") Long articleId,
+                                            @Param("limit") int limit,
+                                            @Param("offset") int offset);
 }
