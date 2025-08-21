@@ -102,11 +102,15 @@ CREATE TABLE comments (
                           user_id      BIGINT NOT NULL,
                           content      TEXT NOT NULL,
                           parent_id    BIGINT DEFAULT NULL,
+                          is_deleted   BOOLEAN NOT NULL DEFAULT FALSE,   -- 软删除标记
+                          is_pinned    BOOLEAN NOT NULL DEFAULT FALSE,   -- 是否置顶
                           create_time  DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
                           update_time  DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    -- 索引：仅你要求的两个
+
+    -- 索引
                           INDEX idx_article_time (article_id, create_time),
-                          INDEX idx_parent (parent_id)
+                          INDEX idx_parent (parent_id),
+                          INDEX idx_article_pinned (article_id, is_pinned, create_time) -- 方便查置顶+排序
 ) ENGINE=InnoDB
   DEFAULT CHARSET = utf8mb4
   COLLATE = utf8mb4_general_ci;
