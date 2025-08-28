@@ -35,7 +35,7 @@ public interface CommentMapper {
         """)
     long countTopLevel(@Param("articleId") Long articleId);
 
-    /** 置顶在前 + 时间正序 */
+    /** 顶层：置顶在前 + 时间正序，带回复数 */
     @Select("""
         SELECT
           c.id,
@@ -44,7 +44,10 @@ public interface CommentMapper {
           u.avatar,
           c.content,
           c.is_pinned AS isPinned,
-          c.create_time AS createTime
+          c.create_time AS createTime,
+          (SELECT COUNT(*) FROM comments r
+             WHERE r.parent_id = c.id AND r.is_deleted = FALSE
+          ) AS replyCount
         FROM comments c
         JOIN users u ON u.id = c.user_id
         WHERE c.article_id = #{articleId}
@@ -57,7 +60,7 @@ public interface CommentMapper {
                                            @Param("limit") int limit,
                                            @Param("offset") int offset);
 
-    /** 置顶在前 + 时间倒序 */
+    /** 顶层：置顶在前 + 时间倒序，带回复数 */
     @Select("""
         SELECT
           c.id,
@@ -66,7 +69,10 @@ public interface CommentMapper {
           u.avatar,
           c.content,
           c.is_pinned AS isPinned,
-          c.create_time AS createTime
+          c.create_time AS createTime,
+          (SELECT COUNT(*) FROM comments r
+             WHERE r.parent_id = c.id AND r.is_deleted = FALSE
+          ) AS replyCount
         FROM comments c
         JOIN users u ON u.id = c.user_id
         WHERE c.article_id = #{articleId}
