@@ -78,4 +78,53 @@ public interface CommentMapper {
     List<CommentItemDTO> selectTopLevelDesc(@Param("articleId") Long articleId,
                                             @Param("limit") int limit,
                                             @Param("offset") int offset);
+
+    // 子评论列表（正序+倒序）
+    @Select("""
+        SELECT COUNT(*)
+        FROM comments c
+        WHERE c.parent_id = #{parentId}
+          AND c.is_deleted = FALSE
+        """)
+    long countByParent(@Param("parentId") Long parentId);
+
+    @Select("""
+        SELECT
+          c.id,
+          c.user_id AS userId,
+          u.nickname,
+          u.avatar,
+          c.content,
+          c.is_pinned AS isPinned,
+          c.create_time AS createTime
+        FROM comments c
+        JOIN users u ON u.id = c.user_id
+        WHERE c.parent_id = #{parentId}
+          AND c.is_deleted = FALSE
+        ORDER BY c.is_pinned DESC, c.create_time ASC
+        LIMIT #{limit} OFFSET #{offset}
+        """)
+    List<CommentItemDTO> selectRepliesAsc(@Param("parentId") Long parentId,
+                                          @Param("limit") int limit,
+                                          @Param("offset") int offset);
+
+    @Select("""
+        SELECT
+          c.id,
+          c.user_id AS userId,
+          u.nickname,
+          u.avatar,
+          c.content,
+          c.is_pinned AS isPinned,
+          c.create_time AS createTime
+        FROM comments c
+        JOIN users u ON u.id = c.user_id
+        WHERE c.parent_id = #{parentId}
+          AND c.is_deleted = FALSE
+        ORDER BY c.is_pinned DESC, c.create_time DESC
+        LIMIT #{limit} OFFSET #{offset}
+        """)
+    List<CommentItemDTO> selectRepliesDesc(@Param("parentId") Long parentId,
+                                           @Param("limit") int limit,
+                                           @Param("offset") int offset);
 }

@@ -8,8 +8,11 @@ public interface CommentService {
     // 发表评论
     Long createComment(Long userId, Long articleId, CommentCreateDTO dto);
 
-    // 查看文章列表（正序+倒序）
+    // 查看评论列表（正序+倒序）
     PageResult<CommentItemDTO> pageTopLevelAsc(Long articleId, Integer page, Integer size);
     PageResult<CommentItemDTO> pageTopLevelDesc(Long articleId, Integer page, Integer size);
 
+    // 查看子评论列表（正序+倒序）
+    PageResult<CommentItemDTO> pageRepliesAsc(Long parentCommentId, Integer page, Integer size);
+    PageResult<CommentItemDTO> pageRepliesDesc(Long parentCommentId, Integer page, Integer size);
 }

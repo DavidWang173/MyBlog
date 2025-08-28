@@ -116,4 +116,39 @@ public class CommentServiceImpl implements CommentService {
                 : commentMapper.selectTopLevelDesc(articleId, pageSize, offset);
         return PageResult.of(total, list, current, pageSize);
     }
+
+    // 子评论列表（正序+倒序）
+    @Override
+    public PageResult<CommentItemDTO> pageRepliesAsc(Long parentCommentId, Integer page, Integer size) {
+        return doPageReplies(parentCommentId, page, size, true);
+    }
+
+    @Override
+    public PageResult<CommentItemDTO> pageRepliesDesc(Long parentCommentId, Integer page, Integer size) {
+        return doPageReplies(parentCommentId, page, size, false);
+    }
+
+    private PageResult<CommentItemDTO> doPageReplies(Long parentCommentId, Integer page, Integer size, boolean asc) {
+        if (parentCommentId == null || parentCommentId <= 0) {
+            throw new IllegalArgumentException("参数错误");
+        }
+        // 校验父评论存在且未删除
+        Comment parent = commentMapper.findBasicById(parentCommentId);
+        if (parent == null || Boolean.TRUE.equals(parent.getIsDeleted())) {
+            return PageResult.of(0, List.of(), page == null ? 1 : page, size == null ? 20 : size);
+        }
+
+        int current = (page == null || page < 1) ? 1 : page;
+        int pageSize = (size == null) ? 20 : Math.max(1, Math.min(size, 50));
+        int offset = (current - 1) * pageSize;
+
+        long total = commentMapper.countByParent(parentCommentId);
+        List<CommentItemDTO> list = List.of();
+        if (total > 0) {
+            list = asc
+                    ? commentMapper.selectRepliesAsc(parentCommentId, pageSize, offset)
+                    : commentMapper.selectRepliesDesc(parentCommentId, pageSize, offset);
+        }
+        return PageResult.of(total, list, current, pageSize);
+    }
 }

@@ -47,4 +47,20 @@ public class CommentController {
                                                        @RequestParam(defaultValue = "20") Integer pageSize) {
         return Result.success(commentService.pageTopLevelDesc(articleId, page, pageSize));
     }
+
+    /** 子评论：置顶在前 + 时间正序 */
+    @GetMapping("/comment/{commentId}/replies/asc")
+    public Result<PageResult<CommentItemDTO>> repliesAsc(@PathVariable Long commentId,
+                                                         @RequestParam(defaultValue = "1") Integer page,
+                                                         @RequestParam(defaultValue = "20") Integer pageSize) {
+        return Result.success(commentService.pageRepliesAsc(commentId, page, pageSize));
+    }
+
+    /** 子评论：置顶在前 + 时间倒序 */
+    @GetMapping("/comment/{commentId}/replies/desc")
+    public Result<PageResult<CommentItemDTO>> repliesDesc(@PathVariable Long commentId,
+                                                          @RequestParam(defaultValue = "1") Integer page,
+                                                          @RequestParam(defaultValue = "20") Integer pageSize) {
+        return Result.success(commentService.pageRepliesDesc(commentId, page, pageSize));
+    }
 }
