@@ -1,5 +1,6 @@
 package com.pro01.myblog.controller;
 
+import com.pro01.myblog.annotation.AdminRequired;
 import com.pro01.myblog.service.CommentService;
 import com.pro01.myblog.utils.RequestUtil;
 import com.pro01.myblog.pojo.Result;
@@ -16,6 +17,7 @@ public class AdminCommentController {
 
     private final CommentService commentService;
 
+    @AdminRequired
     @DeleteMapping("/comments/{commentId}")
     public Result<Void> adminDelete(@PathVariable Long commentId, HttpServletRequest request) {
         if (!"ADMIN".equalsIgnoreCase(RequestUtil.getRole(request))) {

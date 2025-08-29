@@ -2,6 +2,8 @@ package com.pro01.myblog.service.impl;
 
 import com.pro01.myblog.dto.CommentCreateDTO;
 import com.pro01.myblog.dto.CommentItemDTO;
+import com.pro01.myblog.exception.ForbiddenException;
+import com.pro01.myblog.exception.UnauthorizedException;
 import com.pro01.myblog.pojo.PageResult;
 import com.pro01.myblog.mapper.ArticleMapper4Comment;
 import com.pro01.myblog.mapper.CommentMapper;
@@ -35,7 +37,7 @@ public class CommentServiceImpl implements CommentService {
     @Override
     @Transactional
     public Long createComment(Long userId, Long articleId, CommentCreateDTO dto) {
-        if (userId == null) throw new IllegalArgumentException("未登录");
+        if (userId == null) throw new UnauthorizedException("未登录");
         if (articleId == null) throw new IllegalArgumentException("参数错误");
 
         String key = "comment:rate:" + userId;
@@ -156,14 +158,14 @@ public class CommentServiceImpl implements CommentService {
     @Override
     @Transactional
     public void deleteOwnComment(Long userId, Long commentId) {
-        if (userId == null) throw new IllegalArgumentException("未登录");
+        if (userId == null) throw new UnauthorizedException("未登录");
 
         // 查基本信息
         Comment c = commentMapper.findBasicByIdForDelete(commentId);
         if (c == null) return; // 幂等：不存在视为已删除
 
         if (!userId.equals(c.getUserId())) {
-            throw new IllegalArgumentException("无权删除该评论");
+            throw new ForbiddenException("无权限");
         }
         if (Boolean.TRUE.equals(c.getIsDeleted())) return; // 已删除，幂等成功
 

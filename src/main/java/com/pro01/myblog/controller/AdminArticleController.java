@@ -22,7 +22,6 @@ public class AdminArticleController {
     public Result<?> deleteArticleByAdmin(@PathVariable Long articleId, HttpServletRequest request) {
         String role = RequestUtil.getRole(request);
         if (!"ADMIN".equalsIgnoreCase(role)) {
-            //throw new ForbiddenException("无权限");
             return Result.error("无权限");
         }
         boolean success = articleService.deleteByAdmin(articleId);

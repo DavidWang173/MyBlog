@@ -65,6 +65,7 @@ public class CommentController {
     }
 
     // 用户删除评论
+    @LoginRequired
     @DeleteMapping("/comments/{commentId}")
     public Result<Void> deleteOwn(@PathVariable Long commentId, HttpServletRequest request) {
         Long userId = RequestUtil.getUserId(request);

@@ -4,6 +4,7 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.pro01.myblog.dto.DraftSaveDTO;
 import com.pro01.myblog.dto.DraftDTO;
+import com.pro01.myblog.exception.UnauthorizedException;
 import com.pro01.myblog.mapper.DraftMapper;
 import com.pro01.myblog.mapper.TagMapper;
 import com.pro01.myblog.pojo.ArticleDraft;
@@ -33,7 +34,7 @@ public class DraftServiceImpl implements DraftService {
     @Override
     public Long saveDraft(Long userId, DraftSaveDTO dto) {
         if (userId == null) {
-            throw new IllegalArgumentException("未登录");
+            throw new UnauthorizedException("未登录");
         }
 
         // 1) 处理标签：去空白、去重、限5、只保留系统标签
@@ -101,7 +102,7 @@ public class DraftServiceImpl implements DraftService {
     // 草稿列表
     @Override
     public PageResult<DraftDTO> listMyDrafts(Long userId, Integer page, Integer size) {
-        if (userId == null) throw new IllegalArgumentException("未登录");
+        if (userId == null) throw new UnauthorizedException("未登录");
 
         int current = (page == null || page < 1) ? 1 : page;
         int pageSize = (size == null) ? 20 : Math.max(1, Math.min(size, 50));
@@ -152,7 +153,7 @@ public class DraftServiceImpl implements DraftService {
     // 模糊查询草稿（分页）
     @Override
     public PageResult<DraftDTO> searchMyDrafts(Long userId, String q, Integer page, Integer size) {
-        if (userId == null) throw new IllegalArgumentException("未登录");
+        if (userId == null) throw new UnauthorizedException("未登录");
 
         String key = (q == null) ? "" : q.trim();
         if (key.isEmpty()) {
@@ -183,7 +184,7 @@ public class DraftServiceImpl implements DraftService {
     // 查看草稿详情
     @Override
     public DraftDTO getMyDraftById(Long userId, Long draftId) {
-        if (userId == null) throw new IllegalArgumentException("未登录");
+        if (userId == null) throw new UnauthorizedException("未登录");
         ArticleDraft d = draftMapper.selectByIdAndUser(draftId, userId);
         if (d == null) throw new IllegalArgumentException("草稿不存在或已被删除");
 
@@ -206,7 +207,7 @@ public class DraftServiceImpl implements DraftService {
     // 最新草稿弹窗
     @Override
     public DraftDTO findLatestCandidate(Long userId) {
-        if (userId == null) throw new IllegalArgumentException("未登录");
+        if (userId == null) throw new UnauthorizedException("未登录");
         ArticleDraft d = draftMapper.selectLatestCandidateByUser(userId);
         if (d == null) return null;
 
@@ -229,7 +230,7 @@ public class DraftServiceImpl implements DraftService {
     // 拒绝调出草稿
     @Override
     public void dismissDraft(Long userId, Long draftId) {
-        if (userId == null) throw new IllegalArgumentException("未登录");
+        if (userId == null) throw new UnauthorizedException("未登录");
         // 幂等更新：只有本人、未删除、且当前为 false 才更新为 true
         draftMapper.dismissByIdAndUser(draftId, userId);
         // rows=0 的情况：已删除、非本人、或已是 true —— 都视为幂等成功，不抛错
@@ -238,7 +239,7 @@ public class DraftServiceImpl implements DraftService {
     // 软删除草稿
     @Override
     public void softDelete(Long userId, Long draftId) {
-        if (userId == null) throw new IllegalArgumentException("未登录");
+        if (userId == null) throw new UnauthorizedException("未登录");
         draftMapper.softDeleteByIdAndUser(draftId, userId);
         // 幂等：影响行数为 0 也不抛错（可能已删/不属于当前用户）
     }
