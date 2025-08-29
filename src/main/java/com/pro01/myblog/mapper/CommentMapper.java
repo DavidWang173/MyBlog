@@ -133,4 +133,28 @@ public interface CommentMapper {
     List<CommentItemDTO> selectRepliesDesc(@Param("parentId") Long parentId,
                                            @Param("limit") int limit,
                                            @Param("offset") int offset);
+
+    @Select("""
+        SELECT id, article_id AS articleId, user_id AS userId, is_deleted AS isDeleted
+        FROM comments
+        WHERE id = #{id}
+        """)
+    Comment findBasicByIdForDelete(@Param("id") Long id);
+
+    @Update("""
+        UPDATE comments
+        SET is_deleted = TRUE
+        WHERE id = #{id}
+          AND user_id = #{userId}
+          AND is_deleted = FALSE
+        """)
+    int softDeleteByIdAndUser(@Param("id") Long id, @Param("userId") Long userId);
+
+    @Update("""
+        UPDATE comments
+        SET is_deleted = TRUE
+        WHERE id = #{id}
+          AND is_deleted = FALSE
+        """)
+    int softDeleteById(@Param("id") Long id);
 }

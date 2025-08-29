@@ -151,4 +151,42 @@ public class CommentServiceImpl implements CommentService {
         }
         return PageResult.of(total, list, current, pageSize);
     }
+
+    // 用户删除评论
+    @Override
+    @Transactional
+    public void deleteOwnComment(Long userId, Long commentId) {
+        if (userId == null) throw new IllegalArgumentException("未登录");
+
+        // 查基本信息
+        Comment c = commentMapper.findBasicByIdForDelete(commentId);
+        if (c == null) return; // 幂等：不存在视为已删除
+
+        if (!userId.equals(c.getUserId())) {
+            throw new IllegalArgumentException("无权删除该评论");
+        }
+        if (Boolean.TRUE.equals(c.getIsDeleted())) return; // 已删除，幂等成功
+
+        // 软删（带 userId 条件，防并发/越权）
+        int rows = commentMapper.softDeleteByIdAndUser(commentId, userId);
+        if (rows > 0) {
+            // 只有本次从未删 -> 已删 才递减计数
+            articleMapper4Comment.decCommentCount(c.getArticleId());
+            stringRedisTemplate.delete("article:detail:" + c.getArticleId());
+        }
+    }
+
+    // 管理员删除评论
+    @Override
+    @Transactional
+    public void adminDeleteComment(Long commentId) {
+        Comment c = commentMapper.findBasicByIdForDelete(commentId);
+        if (c == null || Boolean.TRUE.equals(c.getIsDeleted())) return; // 幂等
+
+        int rows = commentMapper.softDeleteById(commentId);
+        if (rows > 0) {
+            articleMapper4Comment.decCommentCount(c.getArticleId());
+            stringRedisTemplate.delete("article:detail:" + c.getArticleId());
+        }
+    }
 }

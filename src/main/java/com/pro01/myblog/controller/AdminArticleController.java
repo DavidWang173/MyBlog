@@ -1,6 +1,7 @@
 package com.pro01.myblog.controller;
 
 import com.pro01.myblog.annotation.AdminRequired;
+import com.pro01.myblog.exception.ForbiddenException;
 import com.pro01.myblog.pojo.Result;
 import com.pro01.myblog.service.ArticleService;
 import com.pro01.myblog.utils.RequestUtil;
@@ -21,6 +22,7 @@ public class AdminArticleController {
     public Result<?> deleteArticleByAdmin(@PathVariable Long articleId, HttpServletRequest request) {
         String role = RequestUtil.getRole(request);
         if (!"ADMIN".equalsIgnoreCase(role)) {
+            //throw new ForbiddenException("无权限");
             return Result.error("无权限");
         }
         boolean success = articleService.deleteByAdmin(articleId);

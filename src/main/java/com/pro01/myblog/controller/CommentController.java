@@ -63,4 +63,12 @@ public class CommentController {
                                                           @RequestParam(defaultValue = "20") Integer pageSize) {
         return Result.success(commentService.pageRepliesDesc(commentId, page, pageSize));
     }
+
+    // 用户删除评论
+    @DeleteMapping("/comments/{commentId}")
+    public Result<Void> deleteOwn(@PathVariable Long commentId, HttpServletRequest request) {
+        Long userId = RequestUtil.getUserId(request);
+        commentService.deleteOwnComment(userId, commentId);
+        return Result.success();
+    }
 }
